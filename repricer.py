@@ -10,15 +10,15 @@ Logic:
 from __future__ import annotations
 import logging
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 from database import get_db
-from amazon_api import get_buy_box_price, update_price
+from amazon_api import get_buy_box_price, update_price, _build_credentials
 
 logger = logging.getLogger(__name__)
 
 
-def _reprice_one(listing: dict[str, Any]) -> dict[str, Any]:
+def _reprice_one(listing: dict[str, Any], credentials: dict, seller_id_amz: str) -> dict[str, Any]:
     """Process a single listing and return an action result dict."""
     sku           = listing["sku"]
     asin          = listing["asin"]
@@ -37,7 +37,7 @@ def _reprice_one(listing: dict[str, Any]) -> dict[str, Any]:
     }
 
     # ── 1. Get Buy Box price ───────────────────────────────────────────────
-    buy_box = get_buy_box_price(asin)
+    buy_box = get_buy_box_price(asin, credentials)
     result["buy_box_price"] = buy_box
 
     if buy_box is None:
@@ -48,14 +48,10 @@ def _reprice_one(listing: dict[str, Any]) -> dict[str, Any]:
     # ── 2. Clamp to guardrails ─────────────────────────────────────────────
     if buy_box < min_price:
         target = min_price
-        result["reason"] = (
-            f"Buy Box £{buy_box:.2f} < min £{min_price:.2f} — holding at floor"
-        )
+        result["reason"] = f"Buy Box £{buy_box:.2f} < min £{min_price:.2f} — holding at floor"
     elif buy_box > max_price:
         target = max_price
-        result["reason"] = (
-            f"Buy Box £{buy_box:.2f} > max £{max_price:.2f} — holding at ceiling"
-        )
+        result["reason"] = f"Buy Box £{buy_box:.2f} > max £{max_price:.2f} — holding at ceiling"
     else:
         target = buy_box
         result["reason"] = f"Matching Buy Box at £{buy_box:.2f}"
@@ -67,7 +63,7 @@ def _reprice_one(listing: dict[str, Any]) -> dict[str, Any]:
         return result
 
     # ── 4. Push update ────────────────────────────────────────────────────
-    success = update_price(sku, target)
+    success = update_price(sku, target, credentials, seller_id_amz)
     if success:
         result["new_price"] = target
         result["action"]    = "REPRICED"
@@ -78,69 +74,86 @@ def _reprice_one(listing: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
-def run_repricer() -> list[dict[str, Any]]:
+def run_repricer(seller_id: Optional[int] = None) -> list[dict[str, Any]]:
     """
-    Iterate over all enabled listings, apply repricing, persist results.
-    Returns the list of action-result dicts (one per listing).
+    Iterate over all enabled listings for all sellers (or one seller if seller_id given).
+    Returns the list of action-result dicts.
     """
     conn = get_db()
     cursor = conn.cursor()
 
-    listings = cursor.execute(
-        "SELECT * FROM listings WHERE enabled = 1"
-    ).fetchall()
+    if seller_id is not None:
+        sellers = cursor.execute(
+            "SELECT id FROM sellers WHERE id = ?", (seller_id,)
+        ).fetchall()
+    else:
+        sellers = cursor.execute("SELECT id FROM sellers").fetchall()
 
-    results: list[dict[str, Any]] = []
+    all_results: list[dict[str, Any]] = []
 
-    for row in listings:
-        listing = dict(row)
-        try:
-            res = _reprice_one(listing)
-        except Exception as exc:
-            logger.exception("Unhandled error repricing SKU=%s: %s", listing["sku"], exc)
-            res = {
-                "sku":           listing["sku"],
-                "asin":          listing["asin"],
-                "old_price":     listing["current_price"],
-                "new_price":     listing["current_price"],
-                "buy_box_price": None,
-                "action":        "ERROR",
-                "reason":        str(exc),
-            }
+    for seller_row in sellers:
+        sid = seller_row["id"]
 
-        # ── Persist to DB ──────────────────────────────────────────────
-        cursor.execute(
-            """
-            UPDATE listings
-               SET buy_box_price = ?,
-                   current_price = ?,
-                   last_repriced = ?
-             WHERE sku = ?
-            """,
-            (res["buy_box_price"], res["new_price"], datetime.now().isoformat(), res["sku"]),
-        )
+        creds_row = cursor.execute(
+            "SELECT * FROM seller_credentials WHERE seller_id = ?", (sid,)
+        ).fetchone()
 
-        cursor.execute(
-            """
-            INSERT INTO reprice_log
-                (sku, asin, old_price, new_price, buy_box_price, action, reason)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                res["sku"], res["asin"],
-                res["old_price"], res["new_price"],
-                res["buy_box_price"],
-                res["action"], res["reason"],
-            ),
-        )
+        if not creds_row:
+            logger.warning("Seller id=%d has no credentials — skipping", sid)
+            continue
 
-        results.append(res)
+        credentials  = _build_credentials(dict(creds_row))
+        seller_id_amz = creds_row["seller_id_amz"]
+
+        listings = cursor.execute(
+            "SELECT * FROM listings WHERE enabled = 1 AND seller_id = ?", (sid,)
+        ).fetchall()
+
+        for row in listings:
+            listing = dict(row)
+            try:
+                res = _reprice_one(listing, credentials, seller_id_amz)
+            except Exception as exc:
+                logger.exception("Unhandled error repricing SKU=%s: %s", listing["sku"], exc)
+                res = {
+                    "sku":           listing["sku"],
+                    "asin":          listing["asin"],
+                    "old_price":     listing["current_price"],
+                    "new_price":     listing["current_price"],
+                    "buy_box_price": None,
+                    "action":        "ERROR",
+                    "reason":        str(exc),
+                }
+
+            cursor.execute(
+                """
+                UPDATE listings
+                   SET buy_box_price = ?,
+                       current_price = ?,
+                       last_repriced = ?
+                 WHERE sku = ? AND seller_id = ?
+                """,
+                (res["buy_box_price"], res["new_price"], datetime.now().isoformat(),
+                 res["sku"], sid),
+            )
+
+            cursor.execute(
+                """
+                INSERT INTO reprice_log
+                    (seller_id, sku, asin, old_price, new_price, buy_box_price, action, reason)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (sid, res["sku"], res["asin"], res["old_price"], res["new_price"],
+                 res["buy_box_price"], res["action"], res["reason"]),
+            )
+
+            all_results.append(res)
 
     conn.commit()
     conn.close()
 
-    repriced = sum(1 for r in results if r["action"] == "REPRICED")
+    repriced = sum(1 for r in all_results if r["action"] == "REPRICED")
     logger.info(
-        "Repricer run complete — %d processed, %d repriced", len(results), repriced
+        "Repricer run complete — %d processed, %d repriced", len(all_results), repriced
     )
-    return results
+    return all_results

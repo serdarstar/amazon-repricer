@@ -18,36 +18,34 @@ from config import config
 
 logger = logging.getLogger(__name__)
 
-# ── Credentials dict consumed by python-amazon-sp-api ─────────────────────
-_CREDENTIALS: dict = {
-    "refresh_token":      config.REFRESH_TOKEN,
-    "lwa_app_id":         config.LWA_APP_ID,
-    "lwa_client_secret":  config.LWA_CLIENT_SECRET,
-    "aws_access_key":     config.AWS_ACCESS_KEY,
-    "aws_secret_key":     config.AWS_SECRET_KEY,
-    "role_arn":           config.ROLE_ARN,
-}
-
 _MARKETPLACE = Marketplaces.UK
 
 
-# ── Public helpers ─────────────────────────────────────────────────────────
+def _build_credentials(seller: dict) -> dict:
+    """Build the credentials dict expected by python-amazon-sp-api from a seller row."""
+    return {
+        "refresh_token":     seller["refresh_token"],
+        "lwa_app_id":        seller["lwa_app_id"],
+        "lwa_client_secret": seller["lwa_client_secret"],
+        "aws_access_key":    seller["aws_access_key"],
+        "aws_secret_key":    seller["aws_secret_key"],
+        "role_arn":          seller["role_arn"],
+    }
 
-def get_buy_box_price(asin: str) -> Optional[float]:
+
+def get_buy_box_price(asin: str, credentials: dict) -> Optional[float]:
     """
-    Return the current Buy Box (competitive price ID = '1') for *asin*
-    on Amazon UK, or None if unavailable / request failed.
+    Return the current Buy Box price for *asin* on Amazon UK, or None if unavailable.
     """
     try:
-        api = Products(credentials=_CREDENTIALS, marketplace=_MARKETPLACE)
-        resp = api.get_competitive_pricing_for_asins(asins=[asin])
+        api = Products(credentials=credentials, marketplace=_MARKETPLACE)
+        resp = api.get_competitive_pricing_for_asins(asin_list=[asin])
 
         for item in resp.payload:
             if item.get("ASIN") != asin:
                 continue
             comp = item.get("Product", {}).get("CompetitivePricing", {})
             for cp in comp.get("CompetitivePrices", []):
-                # CompetitivePriceId '1' = Buy Box price
                 if str(cp.get("CompetitivePriceId")) == "1":
                     amount = cp["Price"]["LandedPrice"]["Amount"]
                     return float(amount)
@@ -56,18 +54,18 @@ def get_buy_box_price(asin: str) -> Optional[float]:
     except SellingApiException as exc:
         logger.warning("SP-API [get_buy_box_price] ASIN=%s  error=%s", asin, exc)
         return None
-    except Exception as exc:                          # network, parse, etc.
+    except Exception as exc:
         logger.error("Unexpected error in get_buy_box_price: %s", exc)
         return None
 
 
-def update_price(sku: str, new_price: float) -> bool:
+def update_price(sku: str, new_price: float, credentials: dict, seller_id_amz: str) -> bool:
     """
     Patch the listing price for *sku* using the Listings Items API v2021-08-01.
     Returns True if Amazon accepted the request.
     """
     try:
-        api = ListingsItems(credentials=_CREDENTIALS, marketplace=_MARKETPLACE)
+        api = ListingsItems(credentials=credentials, marketplace=_MARKETPLACE)
 
         body = {
             "productType": "PRODUCT",
@@ -93,7 +91,7 @@ def update_price(sku: str, new_price: float) -> bool:
         }
 
         resp = api.patch_listings_item(
-            sellerId=config.SELLER_ID,
+            sellerId=seller_id_amz,
             sku=sku,
             marketplaceIds=[config.MARKETPLACE_ID],
             body=body,
@@ -105,9 +103,7 @@ def update_price(sku: str, new_price: float) -> bool:
             return True
 
         logger.warning(
-            "Unexpected status from patch_listings_item  SKU=%s  status=%s",
-            sku,
-            status,
+            "Unexpected status from patch_listings_item  SKU=%s  status=%s", sku, status
         )
         return False
 
