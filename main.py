@@ -154,18 +154,21 @@ async def login_page(error: str = "") -> HTMLResponse:
 
 @app.post("/login")
 async def login_submit(
+    request: Request,
     username: str = Form(...),
     password: str = Form(...),
 ) -> RedirectResponse:
     if username == config.AUTH_USERNAME and password == config.AUTH_PASSWORD:
         token    = _make_session_token(username)
         response = RedirectResponse("/", status_code=302)
+        is_https = request.headers.get("x-forwarded-proto") == "https"
         response.set_cookie(
             SESSION_COOKIE,
             token,
             max_age=SESSION_MAX_AGE,
             httponly=True,
             samesite="lax",
+            secure=is_https,
         )
         logger.info("Successful login: %s", username)
         return response
