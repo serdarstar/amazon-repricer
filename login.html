@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RepricerUK — Sign in</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #0b0e14;
+    --surface:  #111520;
+    --card:     #161c2a;
+    --border:   #1f2a3f;
+    --border2:  #2a3a55;
+    --orange:   #FF9900;
+    --red:      #ef4444;
+    --text:     #d4dce8;
+    --muted:    #5a6a82;
+    --label:    #8fa3be;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    color: var(--text);
+  }
+
+  /* subtle grid background */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 48px 48px;
+    opacity: .35;
+    pointer-events: none;
+  }
+
+  /* orange glow blob */
+  body::after {
+    content: '';
+    position: fixed;
+    width: 480px; height: 480px;
+    background: radial-gradient(circle, rgba(255,153,0,.12) 0%, transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -60%);
+    pointer-events: none;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border2);
+    border-radius: 16px;
+    padding: 40px 40px 36px;
+    width: 380px;
+    position: relative; z-index: 1;
+    box-shadow: 0 24px 64px rgba(0,0,0,.6), 0 0 0 1px rgba(255,153,0,.06);
+    animation: fadeUp .3s ease;
+  }
+
+  @keyframes fadeUp {
+    from { transform: translateY(16px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 28px;
+  }
+  .logo-icon {
+    width: 34px; height: 34px; background: var(--orange);
+    border-radius: 8px; display: grid; place-items: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .logo-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px; font-weight: 800; color: #fff; letter-spacing: -.5px;
+  }
+  .logo-text span { color: var(--orange); }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px; font-weight: 700; color: #fff;
+    margin-bottom: 6px;
+  }
+  .subtitle {
+    font-size: 13px; color: var(--muted); margin-bottom: 28px;
+  }
+
+  .form-group {
+    display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px;
+  }
+  label {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .08em; color: var(--label);
+  }
+  input[type="text"],
+  input[type="password"] {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    border-radius: 9px;
+    padding: 11px 14px;
+    font-size: 14px; font-family: 'DM Sans', sans-serif;
+    outline: none; width: 100%;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  input:focus {
+    border-color: var(--orange);
+    box-shadow: 0 0 0 3px rgba(255,153,0,.12);
+  }
+  input::placeholder { color: var(--muted); }
+
+  .error-msg {
+    background: rgba(239,68,68,.1);
+    border: 1px solid rgba(239,68,68,.3);
+    color: #fca5a5;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .error-msg::before { content: '✕'; font-weight: 700; }
+
+  button[type="submit"] {
+    width: 100%; padding: 12px;
+    background: var(--orange); color: #000;
+    border: none; border-radius: 9px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 700;
+    cursor: pointer; margin-top: 8px;
+    transition: background .15s, transform .1s;
+    letter-spacing: .02em;
+  }
+  button[type="submit"]:hover  { background: #ffb833; }
+  button[type="submit"]:active { background: #cc7a00; transform: scale(.99); }
+
+  .footer {
+    text-align: center; margin-top: 20px;
+    font-size: 11px; color: var(--muted);
+  }
+  .footer code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--surface); padding: 2px 6px;
+    border-radius: 4px; color: var(--label);
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <div class="logo-icon">↕</div>
+    <div class="logo-text">Repricer<span>UK</span></div>
+  </div>
+
+  <h1>Welcome back</h1>
+  <p class="subtitle">Sign in to manage your Amazon UK repricer.</p>
+
+  <!--ERROR-->
+
+  <form method="POST" action="/login">
+    <div class="form-group">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username"
+             placeholder="admin" autocomplete="username" autofocus required />
+    </div>
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password"
+             placeholder="••••••••••" autocomplete="current-password" required />
+    </div>
+    <button type="submit">Sign in →</button>
+  </form>
+
+  <p class="footer">
+    Credentials are set in your <code>.env</code> file.
+  </p>
+</div>
+</body>
+</html>

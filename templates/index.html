@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RepricerUK — Amazon Buy Box Repricer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0b0e14;
+    --surface:   #111520;
+    --card:      #161c2a;
+    --border:    #1f2a3f;
+    --border2:   #2a3a55;
+    --orange:    #FF9900;
+    --orange-dk: #cc7a00;
+    --orange-lt: #ffb833;
+    --green:     #22c55e;
+    --red:       #ef4444;
+    --text:      #d4dce8;
+    --muted:     #5a6a82;
+    --label:     #8fa3be;
+    --font-head: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Header ──────────────────────────────────────────────────── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    height: 58px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--font-head);
+    font-size: 20px; font-weight: 800;
+    letter-spacing: -0.5px; color: #fff;
+  }
+  .logo-icon {
+    width: 30px; height: 30px; background: var(--orange);
+    border-radius: 7px;
+    display: grid; place-items: center; font-size: 15px;
+  }
+  .logo span { color: var(--orange); }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+
+  .pill {
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 12px; border-radius: 20px;
+    font-size: 12px; font-weight: 500; cursor: pointer;
+    border: 1px solid transparent; transition: all .15s;
+    font-family: var(--font-body);
+  }
+  .pill-ghost {
+    background: transparent; border-color: var(--border2);
+    color: var(--label);
+  }
+  .pill-ghost:hover { border-color: var(--orange); color: var(--orange); }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 8px; border: none;
+    font-family: var(--font-body); font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all .15s;
+  }
+  .btn-primary { background: var(--orange); color: #000; }
+  .btn-primary:hover { background: var(--orange-lt); }
+  .btn-primary:active { background: var(--orange-dk); }
+  .btn-ghost {
+    background: transparent; color: var(--label);
+    border: 1px solid var(--border2);
+  }
+  .btn-ghost:hover { border-color: var(--orange); color: var(--orange); }
+  .btn-danger { background: #7f1d1d; color: #fca5a5; border: 1px solid #991b1b; }
+  .btn-danger:hover { background: #991b1b; }
+
+  /* ── Status dot ───────────────────────────────────────────────── */
+  .status-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    display: inline-block; margin-right: 4px;
+    animation: pulse 2s infinite;
+  }
+  .dot-green { background: var(--green); }
+  .dot-orange { background: var(--orange); }
+  .dot-red { background: var(--red); }
+  .dot-grey { background: var(--muted); }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .4; }
+  }
+
+  /* ── Main layout ─────────────────────────────────────────────── */
+  .container { max-width: 1400px; margin: 0 auto; padding: 24px 28px; }
+
+  /* ── Stats grid ──────────────────────────────────────────────── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    transition: border-color .2s;
+  }
+  .stat-card:hover { border-color: var(--border2); }
+  .stat-label {
+    font-size: 11px; font-weight: 500; text-transform: uppercase;
+    letter-spacing: .08em; color: var(--muted); margin-bottom: 8px;
+  }
+  .stat-value {
+    font-family: var(--font-head);
+    font-size: 28px; font-weight: 700; color: #fff;
+  }
+  .stat-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .stat-orange .stat-value { color: var(--orange); }
+  .stat-green  .stat-value { color: var(--green); }
+
+  /* ── Toolbar ─────────────────────────────────────────────────── */
+  .toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .tabs { display: flex; gap: 4px; }
+  .tab {
+    padding: 7px 16px; border-radius: 6px; cursor: pointer;
+    font-size: 13px; font-weight: 500; color: var(--muted);
+    transition: all .15s;
+  }
+  .tab.active { background: var(--card); color: #fff; border: 1px solid var(--border); }
+  .tab:not(.active):hover { color: var(--text); }
+
+  .search-wrap {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .search-input {
+    background: var(--card); border: 1px solid var(--border);
+    color: var(--text); border-radius: 7px;
+    padding: 7px 12px; font-size: 13px; font-family: var(--font-body);
+    width: 220px; outline: none;
+    transition: border-color .15s;
+  }
+  .search-input::placeholder { color: var(--muted); }
+  .search-input:focus { border-color: var(--orange); }
+
+  /* ── Table ───────────────────────────────────────────────────── */
+  .table-wrap {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; overflow: hidden;
+  }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    padding: 10px 14px;
+    background: var(--surface);
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .07em; color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    text-align: left; white-space: nowrap;
+  }
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background .1s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,153,0,.04); }
+  td {
+    padding: 11px 14px; font-size: 13px; color: var(--text);
+    vertical-align: middle;
+  }
+  .mono { font-family: var(--font-mono); font-size: 13px; }
+  .price-current { color: #fff; font-weight: 600; }
+  .price-bb { color: var(--orange); }
+  .price-min { color: var(--muted); }
+  .price-max { color: var(--muted); }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 9px; border-radius: 20px;
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .05em;
+  }
+  .badge-repriced { background: rgba(34,197,94,.12); color: var(--green); border: 1px solid rgba(34,197,94,.25); }
+  .badge-nochange { background: rgba(90,106,130,.12); color: var(--muted); border: 1px solid var(--border); }
+  .badge-skipped  { background: rgba(255,153,0,.1); color: var(--orange); border: 1px solid rgba(255,153,0,.25); }
+  .badge-failed   { background: rgba(239,68,68,.1); color: var(--red); border: 1px solid rgba(239,68,68,.25); }
+  .badge-active   { background: rgba(34,197,94,.1); color: var(--green); border: 1px solid rgba(34,197,94,.2); }
+  .badge-paused   { background: rgba(90,106,130,.1); color: var(--muted); border: 1px solid var(--border); }
+
+  .sku-cell { font-family: var(--font-mono); font-size: 12px; color: var(--orange-lt); }
+  .asin-cell { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+  .title-cell { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .actions { display: flex; gap: 6px; }
+  .icon-btn {
+    width: 28px; height: 28px; border-radius: 6px;
+    display: grid; place-items: center;
+    cursor: pointer; border: 1px solid var(--border); background: transparent;
+    color: var(--muted); font-size: 14px; transition: all .15s;
+  }
+  .icon-btn:hover { border-color: var(--orange); color: var(--orange); }
+  .icon-btn.del:hover { border-color: var(--red); color: var(--red); }
+
+  /* toggle switch */
+  .toggle { position: relative; display: inline-block; width: 34px; height: 18px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute; cursor: pointer; inset: 0;
+    background: var(--border2); border-radius: 18px; transition: .2s;
+  }
+  .slider::before {
+    content: ''; position: absolute; width: 12px; height: 12px;
+    border-radius: 50%; background: #fff; left: 3px; top: 3px; transition: .2s;
+  }
+  input:checked + .slider { background: var(--green); }
+  input:checked + .slider::before { transform: translateX(16px); }
+
+  .empty-state {
+    text-align: center; padding: 60px 20px; color: var(--muted);
+  }
+  .empty-state .icon { font-size: 36px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+
+  /* ── Progress bar ─────────────────────────────────────────────── */
+  .progress-bar-wrap {
+    height: 3px; background: var(--border);
+    position: fixed; top: 58px; left: 0; right: 0; z-index: 99;
+    overflow: hidden; display: none;
+  }
+  .progress-bar-wrap.show { display: block; }
+  .progress-bar {
+    height: 3px; background: var(--orange);
+    animation: indeterminate 1.2s linear infinite;
+    width: 40%;
+  }
+  @keyframes indeterminate {
+    0%   { transform: translateX(-100%); }
+    100% { transform: translateX(350%); }
+  }
+
+  /* ── Modals ───────────────────────────────────────────────────── */
+  .overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.7); z-index: 200;
+    justify-content: center; align-items: center;
+    backdrop-filter: blur(3px);
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    background: var(--card); border: 1px solid var(--border2);
+    border-radius: 14px; padding: 28px; width: 480px;
+    max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,.7);
+    animation: slideUp .2s ease;
+  }
+  .modal-wide { width: 580px; }
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+  .modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 22px;
+  }
+  .modal-title {
+    font-family: var(--font-head); font-size: 18px; font-weight: 700; color: #fff;
+  }
+  .close-btn {
+    width: 30px; height: 30px; border-radius: 7px;
+    background: var(--border); border: none; color: var(--muted);
+    cursor: pointer; font-size: 16px; display: grid; place-items: center;
+    transition: all .15s;
+  }
+  .close-btn:hover { background: var(--border2); color: #fff; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+  .form-group:last-child { margin-bottom: 0; }
+  .form-label {
+    font-size: 12px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .07em; color: var(--label);
+  }
+  .form-input, .form-select {
+    background: var(--surface); border: 1px solid var(--border2);
+    color: var(--text); border-radius: 8px;
+    padding: 9px 12px; font-size: 13px; font-family: var(--font-body);
+    outline: none; transition: border-color .15s;
+    width: 100%;
+  }
+  .form-input:focus, .form-select:focus { border-color: var(--orange); }
+  .form-input.mono-input { font-family: var(--font-mono); }
+  .form-hint { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .form-footer {
+    display: flex; justify-content: flex-end; gap: 10px;
+    margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border);
+  }
+
+  /* ── Toast ────────────────────────────────────────────────────── */
+  #toast-container {
+    position: fixed; bottom: 24px; right: 24px;
+    display: flex; flex-direction: column; gap: 8px; z-index: 999;
+  }
+  .toast {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px; border-radius: 10px;
+    background: var(--card); border: 1px solid var(--border2);
+    color: var(--text); font-size: 13px; font-weight: 500;
+    box-shadow: 0 8px 24px rgba(0,0,0,.5);
+    animation: toastIn .2s ease; min-width: 260px;
+  }
+  .toast-success { border-left: 3px solid var(--green); }
+  .toast-error   { border-left: 3px solid var(--red); }
+  .toast-info    { border-left: 3px solid var(--orange); }
+  @keyframes toastIn {
+    from { transform: translateX(30px); opacity: 0; }
+    to   { transform: translateX(0); opacity: 1; }
+  }
+
+  /* ── Settings section ─────────────────────────────────────────── */
+  .settings-section { margin-bottom: 24px; }
+  .settings-section-title {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .08em; color: var(--muted);
+    padding-bottom: 10px; margin-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .setting-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+  }
+  .setting-row:last-child { border-bottom: none; }
+  .setting-name { font-size: 13px; font-weight: 500; color: var(--text); }
+  .setting-desc { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* ── Log table specifics ─────────────────────────────────────── */
+  .log-action { font-family: var(--font-mono); font-size: 11px; }
+  .price-arrow { color: var(--muted); margin: 0 4px; }
+  .reason-cell { max-width: 260px; color: var(--muted); font-size: 12px; }
+
+  /* ── Scrollbar ───────────────────────────────────────────────── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  /* ── Last run indicator ──────────────────────────────────────── */
+  .last-run-badge {
+    font-size: 11px; color: var(--muted); font-family: var(--font-mono);
+  }
+</style>
+</head>
+<body>
+
+<!-- Progress bar -->
+<div class="progress-bar-wrap" id="progress"><div class="progress-bar"></div></div>
+
+<!-- Header -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">↕</div>
+    Repricer<span>UK</span>
+  </div>
+  <div class="header-right">
+    <span id="status-indicator" class="pill pill-ghost">
+      <span class="status-dot dot-green"></span>
+      <span id="status-text">Live</span>
+    </span>
+    <span class="last-run-badge">Last run: <span id="last-run-time">—</span></span>
+    <button class="btn btn-ghost" onclick="openSettings()">⚙ Settings</button>
+    <button class="btn btn-primary" onclick="manualRun()" id="run-btn">▶ Run Now</button>
+    <a href="/logout" class="btn btn-ghost" style="text-decoration:none">Sign out</a>
+  </div>
+</header>
+
+<!-- Main -->
+<div class="container">
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Total Listings</div>
+      <div class="stat-value" id="stat-total">—</div>
+      <div class="stat-sub">in database</div>
+    </div>
+    <div class="stat-card stat-green">
+      <div class="stat-label">Active</div>
+      <div class="stat-value" id="stat-active">—</div>
+      <div class="stat-sub">auto-repricing on</div>
+    </div>
+    <div class="stat-card stat-orange">
+      <div class="stat-label">Repriced Today</div>
+      <div class="stat-value" id="stat-today">—</div>
+      <div class="stat-sub">price changes sent</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Matching Buy Box</div>
+      <div class="stat-value" id="stat-bb">—</div>
+      <div class="stat-sub">currently matched</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Interval</div>
+      <div class="stat-value" id="stat-interval">—<span style="font-size:16px;color:var(--muted)">m</span></div>
+      <div class="stat-sub">auto-reprice cycle</div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div style="display:flex;align-items:center;gap:16px">
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('listings',this)">Listings</div>
+        <div class="tab" onclick="switchTab('logs',this)">Activity Log</div>
+      </div>
+    </div>
+    <div class="search-wrap">
+      <input type="text" class="search-input" placeholder="Search SKU / ASIN / title…"
+             id="search-input" oninput="filterTable()" />
+      <button class="btn btn-primary" onclick="openAddModal()">＋ Add Listing</button>
+    </div>
+  </div>
+
+  <!-- Listings panel -->
+  <div class="table-wrap">
+    <div class="panel active" id="panel-listings">
+      <table id="listings-table">
+        <thead>
+          <tr>
+            <th>SKU</th>
+            <th>ASIN</th>
+            <th>Title</th>
+            <th>My Price</th>
+            <th>Buy Box</th>
+            <th>Floor</th>
+            <th>Ceiling</th>
+            <th>BB Diff</th>
+            <th>Status</th>
+            <th>Last Repriced</th>
+            <th style="width:90px">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="listings-body">
+          <tr><td colspan="11">
+            <div class="empty-state"><div class="icon">📦</div><p>No listings yet. Click <strong>+ Add Listing</strong> to get started.</p></div>
+          </td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel" id="panel-logs">
+      <table id="logs-table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>SKU</th>
+            <th>Action</th>
+            <th>Old Price</th>
+            <th>New Price</th>
+            <th>Buy Box</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+        <tbody id="logs-body">
+          <tr><td colspan="7">
+            <div class="empty-state"><div class="icon">📋</div><p>No activity yet. Run the repricer to see logs here.</p></div>
+          </td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ Add / Edit Listing Modal ══════════════ -->
+<div class="overlay" id="listing-overlay" onclick="if(event.target===this)closeListingModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Add Listing</div>
+      <button class="close-btn" onclick="closeListingModal()">✕</button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">SKU</label>
+      <input type="text" id="f-sku" class="form-input mono-input" placeholder="e.g. MY-SKU-001" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">ASIN</label>
+      <input type="text" id="f-asin" class="form-input mono-input" placeholder="e.g. B08XYZ12AB" maxlength="10" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Product Title <span style="color:var(--muted);font-weight:400">(optional)</span></label>
+      <input type="text" id="f-title" class="form-input" placeholder="e.g. Wireless Bluetooth Headphones" />
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Current Price (£)</label>
+        <input type="number" id="f-current" class="form-input mono-input" placeholder="0.00" step="0.01" min="0" />
+      </div>
+      <div></div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Floor Price (£)</label>
+        <input type="number" id="f-min" class="form-input mono-input" placeholder="0.00" step="0.01" min="0" />
+        <span class="form-hint">Never go below this</span>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ceiling Price (£)</label>
+        <input type="number" id="f-max" class="form-input mono-input" placeholder="0.00" step="0.01" min="0" />
+        <span class="form-hint">Never go above this</span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Auto-Reprice</label>
+      <label class="toggle">
+        <input type="checkbox" id="f-enabled" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="form-footer">
+      <button class="btn btn-ghost" onclick="closeListingModal()">Cancel</button>
+      <button class="btn btn-primary" id="save-btn" onclick="saveListing()">Save Listing</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ Settings Modal ══════════════ -->
+<div class="overlay" id="settings-overlay" onclick="if(event.target===this)closeSettings()">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <div class="modal-title">Settings</div>
+      <button class="close-btn" onclick="closeSettings()">✕</button>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Amazon SP-API Credentials</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">
+        Credentials are loaded from your <code style="background:var(--surface);padding:2px 6px;border-radius:4px;color:var(--orange)">.env</code> file.
+        Edit that file and restart the server to update credentials. See <strong>README.md</strong> for the full setup guide.
+      </p>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Marketplace</label>
+          <input type="text" class="form-input" value="Amazon UK (A1F83G8C2ARO7P)" disabled />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Currency</label>
+          <input type="text" class="form-input" value="GBP (£)" disabled />
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Repricer Behaviour</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Auto-reprice interval (minutes)</label>
+          <input type="number" id="s-interval" class="form-input" min="1" max="1440" />
+          <span class="form-hint">Minimum 1 min. Restart server to apply.</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Strategy</label>
+          <input type="text" class="form-input" value="Match Buy Box (with floor/ceiling)" disabled />
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">How it works</div>
+      <ol style="color:var(--muted);font-size:12px;line-height:2;padding-left:18px">
+        <li>Every <em>N</em> minutes, RepricerUK fetches the Buy Box price for each ASIN via the SP-API.</li>
+        <li>If the Buy Box price is within your Floor↔Ceiling range, your price is set to match it exactly.</li>
+        <li>If the Buy Box price is below your Floor, your price is held at the Floor.</li>
+        <li>If the Buy Box price is above your Ceiling, your price is held at the Ceiling.</li>
+        <li>If there is no Buy Box (no winner), the listing is skipped.</li>
+      </ol>
+    </div>
+
+    <div class="form-footer">
+      <button class="btn btn-ghost" onclick="closeSettings()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<!-- ══════════════ JavaScript ══════════════ -->
+<script>
+'use strict';
+
+let allListings = [];
+let editMode    = false;
+let editSku     = null;
+
+// ── Helpers ──────────────────────────────────────────────────────────────
+
+const $ = id => document.getElementById(id);
+
+function fmt(val) {
+  if (val === null || val === undefined) return '<span style="color:var(--muted)">—</span>';
+  return `£${parseFloat(val).toFixed(2)}`;
+}
+
+function fmtDiff(current, bb) {
+  if (current == null || bb == null) return '<span style="color:var(--muted)">—</span>';
+  const diff = parseFloat(current) - parseFloat(bb);
+  if (Math.abs(diff) < 0.005) return '<span style="color:var(--green);font-weight:600">✓ Match</span>';
+  const sign = diff > 0 ? '+' : '';
+  const col  = diff > 0 ? 'var(--red)' : 'var(--green)';
+  return `<span style="color:${col};font-family:var(--font-mono);font-size:12px">${sign}£${Math.abs(diff).toFixed(2)}</span>`;
+}
+
+function fmtTime(ts) {
+  if (!ts || ts === 'Never') return '<span style="color:var(--muted)">Never</span>';
+  try {
+    const d = new Date(ts);
+    return d.toLocaleString('en-GB', { day:'2-digit', month:'short',
+      hour:'2-digit', minute:'2-digit' });
+  } catch { return ts; }
+}
+
+function actionBadge(action) {
+  const map = {
+    REPRICED:  ['badge-repriced', '↕ Repriced'],
+    NO_CHANGE: ['badge-nochange', '– No change'],
+    SKIPPED:   ['badge-skipped',  '◌ Skipped'],
+    FAILED:    ['badge-failed',   '✕ Failed'],
+    ERROR:     ['badge-failed',   '✕ Error'],
+  };
+  const [cls, label] = map[action] || ['badge-nochange', action];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+function showProgress(on) {
+  $('progress').classList.toggle('show', on);
+}
+
+function toast(msg, type='info') {
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  const icons = { success:'✓', error:'✕', info:'ℹ' };
+  el.innerHTML = `<span>${icons[type]||'•'}</span><span>${msg}</span>`;
+  $('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// ── Data fetching ────────────────────────────────────────────────────────
+
+async function fetchStats() {
+  try {
+    const r = await fetch('/api/stats');
+    const d = await r.json();
+    $('stat-total').textContent    = d.total_listings;
+    $('stat-active').textContent   = d.active_listings;
+    $('stat-today').textContent    = d.repriced_today;
+    $('stat-bb').textContent       = d.matching_buy_box;
+    $('stat-interval').innerHTML   = `${d.interval_minutes}<span style="font-size:16px;color:var(--muted)">m</span>`;
+    $('last-run-time').textContent = fmtTime(d.last_run);
+    $('s-interval').value          = d.interval_minutes;
+  } catch(e) { console.error('stats fetch error', e); }
+}
+
+async function fetchListings() {
+  showProgress(true);
+  try {
+    const r = await fetch('/api/listings');
+    allListings = await r.json();
+    renderListings(allListings);
+  } catch(e) {
+    toast('Failed to load listings', 'error');
+  } finally {
+    showProgress(false);
+  }
+}
+
+async function fetchLogs() {
+  showProgress(true);
+  try {
+    const r  = await fetch('/api/reprice/logs?limit=200');
+    const logs = await r.json();
+    renderLogs(logs);
+  } catch(e) {
+    toast('Failed to load logs', 'error');
+  } finally {
+    showProgress(false);
+  }
+}
+
+// ── Render ───────────────────────────────────────────────────────────────
+
+function renderListings(data) {
+  const tbody = $('listings-body');
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="11">
+      <div class="empty-state"><div class="icon">📦</div>
+      <p>No listings yet. Click <strong>+ Add Listing</strong> to get started.</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = data.map(l => `
+    <tr>
+      <td class="sku-cell">${l.sku}</td>
+      <td class="asin-cell">${l.asin}</td>
+      <td class="title-cell" title="${l.title||''}">${l.title || '<span style="color:var(--muted)">—</span>'}</td>
+      <td class="mono price-current">${fmt(l.current_price)}</td>
+      <td class="mono price-bb">${fmt(l.buy_box_price)}</td>
+      <td class="mono price-min">${fmt(l.min_price)}</td>
+      <td class="mono price-max">${fmt(l.max_price)}</td>
+      <td>${fmtDiff(l.current_price, l.buy_box_price)}</td>
+      <td>
+        <span class="badge ${l.enabled ? 'badge-active' : 'badge-paused'}">
+          ${l.enabled ? '● Active' : '○ Paused'}
+        </span>
+      </td>
+      <td style="font-size:12px;color:var(--muted)">${fmtTime(l.last_repriced)}</td>
+      <td>
+        <div class="actions">
+          <label class="toggle" title="${l.enabled ? 'Pause' : 'Activate'}">
+            <input type="checkbox" ${l.enabled?'checked':''} onchange="toggleEnabled('${l.sku}',this.checked)">
+            <span class="slider"></span>
+          </label>
+          <button class="icon-btn" onclick="openEditModal('${l.sku}')" title="Edit">✎</button>
+          <button class="icon-btn del" onclick="deleteListing('${l.sku}')" title="Delete">🗑</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function renderLogs(logs) {
+  const tbody = $('logs-body');
+  if (!logs.length) {
+    tbody.innerHTML = `<tr><td colspan="7">
+      <div class="empty-state"><div class="icon">📋</div>
+      <p>No activity yet. Run the repricer to see logs here.</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = logs.map(l => `
+    <tr>
+      <td style="font-size:11px;color:var(--muted);font-family:var(--font-mono)">${fmtTime(l.timestamp)}</td>
+      <td class="sku-cell">${l.sku}</td>
+      <td>${actionBadge(l.action)}</td>
+      <td class="mono" style="color:var(--muted)">${fmt(l.old_price)}</td>
+      <td class="mono price-current">${fmt(l.new_price)}</td>
+      <td class="mono price-bb">${fmt(l.buy_box_price)}</td>
+      <td class="reason-cell">${l.reason||'—'}</td>
+    </tr>
+  `).join('');
+}
+
+// ── Filter ───────────────────────────────────────────────────────────────
+
+function filterTable() {
+  const q = $('search-input').value.toLowerCase();
+  if (!q) { renderListings(allListings); return; }
+  renderListings(allListings.filter(l =>
+    (l.sku||'').toLowerCase().includes(q) ||
+    (l.asin||'').toLowerCase().includes(q) ||
+    (l.title||'').toLowerCase().includes(q)
+  ));
+}
+
+// ── Tabs ─────────────────────────────────────────────────────────────────
+
+function switchTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  $('panel-' + name).classList.add('active');
+  if (name === 'logs') fetchLogs();
+}
+
+// ── Repricer ─────────────────────────────────────────────────────────────
+
+async function manualRun() {
+  const btn = $('run-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Running…';
+  toast('Repricing started…', 'info');
+  showProgress(true);
+  try {
+    await fetch('/api/reprice/run', { method: 'POST' });
+    toast('Reprice run dispatched. Results will appear shortly.', 'success');
+    setTimeout(() => { fetchListings(); fetchStats(); fetchLogs(); }, 4000);
+  } catch(e) {
+    toast('Failed to start repricer', 'error');
+  } finally {
+    showProgress(false);
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.textContent = '▶ Run Now';
+    }, 5000);
+  }
+}
+
+// ── Toggle enabled ────────────────────────────────────────────────────────
+
+async function toggleEnabled(sku, enabled) {
+  try {
+    await fetch(`/api/listings/${encodeURIComponent(sku)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled }),
+    });
+    toast(`${sku} ${enabled ? 'activated' : 'paused'}`, 'success');
+    fetchListings(); fetchStats();
+  } catch(e) { toast('Update failed', 'error'); }
+}
+
+// ── Delete ────────────────────────────────────────────────────────────────
+
+async function deleteListing(sku) {
+  if (!confirm(`Delete listing "${sku}"? This cannot be undone.`)) return;
+  try {
+    await fetch(`/api/listings/${encodeURIComponent(sku)}`, { method: 'DELETE' });
+    toast(`${sku} deleted`, 'success');
+    fetchListings(); fetchStats();
+  } catch(e) { toast('Delete failed', 'error'); }
+}
+
+// ── Add / Edit modal ──────────────────────────────────────────────────────
+
+function openAddModal() {
+  editMode = false; editSku = null;
+  $('modal-title').textContent = 'Add Listing';
+  $('save-btn').textContent    = 'Save Listing';
+  $('f-sku').value       = '';
+  $('f-asin').value      = '';
+  $('f-title').value     = '';
+  $('f-current').value   = '';
+  $('f-min').value       = '';
+  $('f-max').value       = '';
+  $('f-enabled').checked = true;
+  $('f-sku').disabled    = false;
+  $('listing-overlay').classList.add('open');
+  $('f-sku').focus();
+}
+
+function openEditModal(sku) {
+  const l = allListings.find(x => x.sku === sku);
+  if (!l) return;
+  editMode = true; editSku = sku;
+  $('modal-title').textContent = `Edit — ${sku}`;
+  $('save-btn').textContent    = 'Update Listing';
+  $('f-sku').value       = l.sku;
+  $('f-asin').value      = l.asin;
+  $('f-title').value     = l.title || '';
+  $('f-current').value   = l.current_price || '';
+  $('f-min').value       = l.min_price;
+  $('f-max').value       = l.max_price;
+  $('f-enabled').checked = !!l.enabled;
+  $('f-sku').disabled    = true;
+  $('listing-overlay').classList.add('open');
+}
+
+function closeListingModal() {
+  $('listing-overlay').classList.remove('open');
+}
+
+async function saveListing() {
+  const sku     = $('f-sku').value.trim();
+  const asin    = $('f-asin').value.trim().toUpperCase();
+  const title   = $('f-title').value.trim();
+  const current = parseFloat($('f-current').value);
+  const min     = parseFloat($('f-min').value);
+  const max     = parseFloat($('f-max').value);
+  const enabled = $('f-enabled').checked;
+
+  if (!sku)               return toast('SKU is required', 'error');
+  if (!asin || asin.length !== 10) return toast('ASIN must be 10 characters', 'error');
+  if (isNaN(current) || current < 0) return toast('Enter a valid current price', 'error');
+  if (isNaN(min) || min < 0)         return toast('Enter a valid floor price', 'error');
+  if (isNaN(max) || max < min)       return toast('Ceiling must be ≥ floor price', 'error');
+
+  const body = editMode
+    ? JSON.stringify({ title, current_price: current, min_price: min, max_price: max, enabled })
+    : JSON.stringify({ sku, asin, title, current_price: current, min_price: min, max_price: max, enabled });
+
+  const url    = editMode ? `/api/listings/${encodeURIComponent(editSku)}` : '/api/listings';
+  const method = editMode ? 'PUT' : 'POST';
+
+  try {
+    const r = await fetch(url, {
+      method, headers: { 'Content-Type': 'application/json' }, body,
+    });
+    if (!r.ok) {
+      const err = await r.json();
+      return toast(err.detail || 'Save failed', 'error');
+    }
+    toast(editMode ? `${sku} updated` : `${sku} added`, 'success');
+    closeListingModal();
+    fetchListings(); fetchStats();
+  } catch(e) {
+    toast('Network error', 'error');
+  }
+}
+
+// ── Settings modal ────────────────────────────────────────────────────────
+
+function openSettings()  { $('settings-overlay').classList.add('open'); }
+function closeSettings() { $('settings-overlay').classList.remove('open'); }
+
+// ── Keyboard shortcuts ────────────────────────────────────────────────────
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeListingModal();
+    closeSettings();
+  }
+});
+
+// ── Auto-refresh every 60 s ───────────────────────────────────────────────
+
+function refreshAll() { fetchStats(); fetchListings(); }
+
+setInterval(refreshAll, 60_000);
+
+// ── Bootstrap ────────────────────────────────────────────────────────────
+
+refreshAll();
+</script>
+</body>
+</html>

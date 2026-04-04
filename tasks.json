@@ -1,0 +1,130 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "1. Create virtual environment",
+      "type": "shell",
+      "command": "python -m venv venv",
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "2. Install dependencies",
+      "type": "shell",
+      "windows": {
+        "command": ".\\venv\\Scripts\\python.exe -m pip install -r requirements.txt"
+      },
+      "linux": {
+        "command": "./venv/bin/python -m pip install -r requirements.txt"
+      },
+      "osx": {
+        "command": "./venv/bin/python -m pip install -r requirements.txt"
+      },
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": "build",
+      "dependsOn": "1. Create virtual environment",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "3. Copy .env file",
+      "type": "shell",
+      "windows": {
+        "command": "if not exist .env copy .env.example .env && echo .env created - please fill in your credentials"
+      },
+      "linux": {
+        "command": "[ -f .env ] && echo '.env already exists' || (cp .env.example .env && echo '.env created - please fill in your credentials')"
+      },
+      "osx": {
+        "command": "[ -f .env ] && echo '.env already exists' || (cp .env.example .env && echo '.env created - please fill in your credentials')"
+      },
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "4. Start RepricerUK",
+      "type": "shell",
+      "windows": {
+        "command": ".\\venv\\Scripts\\python.exe -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload"
+      },
+      "linux": {
+        "command": "./venv/bin/python -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload"
+      },
+      "osx": {
+        "command": "./venv/bin/python -m uvicorn main:app --host 127.0.0.1 --port 8000 --reload"
+      },
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {}
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^$"
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Started server process",
+          "endsPattern": "Application startup complete"
+        }
+      }
+    },
+    {
+      "label": "Full Setup (steps 1–3)",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "1. Create virtual environment",
+        "2. Install dependencies",
+        "3. Copy .env file"
+      ],
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Generate SECRET_KEY",
+      "type": "shell",
+      "windows": {
+        "command": ".\\venv\\Scripts\\python.exe -c \"import secrets; print('SECRET_KEY=' + secrets.token_hex(32))\""
+      },
+      "linux": {
+        "command": "./venv/bin/python -c \"import secrets; print('SECRET_KEY=' + secrets.token_hex(32))\""
+      },
+      "osx": {
+        "command": "./venv/bin/python -c \"import secrets; print('SECRET_KEY=' + secrets.token_hex(32))\""
+      },
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

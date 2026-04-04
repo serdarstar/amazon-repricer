@@ -1,0 +1,20 @@
+{
+  "recommendations": [
+    "ms-python.python",
+    "ms-python.debugpy",
+    "ms-python.black-formatter",
+    "ms-python.isort",
+    "ms-python.pylint",
+    "njpwerner.autodocstring",
+    "ms-vscode.vscode-json",
+    "redhat.vscode-yaml",
+    "tamasfe.even-better-toml",
+    "bradlc.vscode-tailwindcss",
+    "esbenp.prettier-vscode",
+    "ecmel.vscode-html-css",
+    "streetsidesoftware.code-spell-checker",
+    "usernamehw.errorlens",
+    "christian-kohler.path-intellisense",
+    "mikestead.dotenv"
+  ]
+}
