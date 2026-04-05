@@ -98,7 +98,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
         data  = _verify_session_token(token)
 
         if not data:
-            if request.url.path.startswith("/api/") or request.url.path.startswith("/admin/"):
+            if request.url.path.startswith("/api/"):
                 return JSONResponse({"detail": "Not authenticated"}, status_code=401)
             return RedirectResponse("/login", status_code=302)
 
