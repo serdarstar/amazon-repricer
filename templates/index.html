@@ -390,6 +390,7 @@
     <span class="last-run-badge">Last run: <span id="last-run-time">—</span></span>
     <button class="btn btn-ghost" onclick="openSettings()">⚙ Settings</button>
     <button class="btn btn-primary" onclick="manualRun()" id="run-btn">▶ Run Now</button>
+    <a href="/admin" class="btn btn-ghost" style="text-decoration:none" id="admin-link">⚙ Admin</a>
     <a href="/logout" class="btn btn-ghost" style="text-decoration:none">Sign out</a>
   </div>
 </header>
@@ -668,6 +669,14 @@ function toast(msg, type='info') {
   $('toast-container').appendChild(el);
   setTimeout(() => el.remove(), 3500);
 }
+
+// ── Hide admin link for non-admins ───────────────────────────────────────
+fetch('/api/me').then(r => r.json()).then(me => {
+  if (!me.is_admin) {
+    const el = document.getElementById('admin-link');
+    if (el) el.style.display = 'none';
+  }
+});
 
 // ── Data fetching ────────────────────────────────────────────────────────
 

@@ -240,6 +240,13 @@ async def dashboard() -> HTMLResponse:
         return HTMLResponse(content=fh.read())
 
 
+@app.get("/admin", response_class=HTMLResponse)
+async def admin_panel(request: Request) -> HTMLResponse:
+    _require_admin(request)
+    with open("templates/admin.html", encoding="utf-8") as fh:
+        return HTMLResponse(content=fh.read())
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 # Session info
 # ══════════════════════════════════════════════════════════════════════════════

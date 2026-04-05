@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RepricerUK — Admin Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #0b0e14;
+    --surface:  #111520;
+    --card:     #161c2a;
+    --border:   #1f2a3f;
+    --border2:  #2a3a55;
+    --orange:   #FF9900;
+    --red:      #ef4444;
+    --green:    #22c55e;
+    --text:     #d4dce8;
+    --muted:    #5a6a82;
+    --label:    #8fa3be;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 28px; height: 58px;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .logo-icon { width: 30px; height: 30px; background: var(--orange); border-radius: 7px; display: grid; place-items: center; font-size: 16px; }
+  .logo-text { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; color: #fff; }
+  .logo-text span { color: var(--orange); }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .badge { background: rgba(255,153,0,.15); color: var(--orange); border: 1px solid rgba(255,153,0,.3); padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .btn-nav { background: var(--card); border: 1px solid var(--border2); color: var(--text); padding: 7px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; text-decoration: none; font-family: 'DM Sans', sans-serif; }
+  .btn-nav:hover { border-color: var(--orange); color: var(--orange); }
+
+  main { max-width: 900px; margin: 0 auto; padding: 32px 24px; }
+  h2 { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 20px; }
+  h3 { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 14px; }
+
+  .section { background: var(--card); border: 1px solid var(--border2); border-radius: 14px; padding: 24px; margin-bottom: 24px; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1 / -1; }
+  label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--label); }
+  input { background: var(--surface); border: 1px solid var(--border2); color: var(--text); border-radius: 8px; padding: 10px 12px; font-size: 13px; font-family: 'DM Sans', sans-serif; outline: none; width: 100%; transition: border-color .15s; }
+  input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(255,153,0,.1); }
+  input::placeholder { color: var(--muted); }
+
+  .btn { padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; font-family: 'DM Sans', sans-serif; cursor: pointer; border: none; transition: background .15s; }
+  .btn-primary { background: var(--orange); color: #000; }
+  .btn-primary:hover { background: #ffb833; }
+  .btn-danger { background: rgba(239,68,68,.15); color: #ef4444; border: 1px solid rgba(239,68,68,.3); }
+  .btn-danger:hover { background: rgba(239,68,68,.25); }
+  .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border2); }
+  .btn-secondary:hover { border-color: var(--orange); color: var(--orange); }
+
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); padding: 8px 12px; border-bottom: 1px solid var(--border); }
+  td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .tag-admin { background: rgba(255,153,0,.15); color: var(--orange); }
+  .tag-seller { background: rgba(90,106,130,.15); color: var(--label); }
+  .tag-ok { background: rgba(34,197,94,.15); color: var(--green); }
+  .tag-missing { background: rgba(239,68,68,.15); color: var(--red); }
+
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--card); border: 1px solid var(--border2); padding: 12px 18px; border-radius: 10px; font-size: 13px; z-index: 999; display: none; box-shadow: 0 8px 32px rgba(0,0,0,.4); }
+  .toast.success { border-color: rgba(34,197,94,.4); color: var(--green); }
+  .toast.error { border-color: rgba(239,68,68,.4); color: #fca5a5; }
+
+  .creds-form { display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+  .creds-form.open { display: block; }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="/">
+    <div class="logo-icon">↕</div>
+    <div class="logo-text">Repricer<span>UK</span></div>
+  </a>
+  <div class="header-right">
+    <span class="badge">Admin Panel</span>
+    <a href="/" class="btn-nav">← Dashboard</a>
+    <a href="/logout" class="btn-nav">Sign out</a>
+  </div>
+</header>
+
+<main>
+  <h2>Seller Management</h2>
+
+  <!-- Add New Seller -->
+  <div class="section">
+    <h3>Add New Seller</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="new-username" placeholder="seller1" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="new-password" placeholder="••••••••" />
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="createSeller()">Create Seller</button>
+  </div>
+
+  <!-- Sellers List -->
+  <div class="section">
+    <h3>All Sellers</h3>
+    <table id="sellers-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Username</th>
+          <th>Role</th>
+          <th>Credentials</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="sellers-body">
+        <tr><td colspan="5" style="color:var(--muted);text-align:center;padding:24px">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Credentials forms (one per seller, shown on demand) -->
+  <div id="creds-forms"></div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let sellers = [];
+let credsStatus = {};
+
+async function loadSellers() {
+  const res = await fetch('/admin/sellers');
+  sellers = await res.json();
+
+  // Check which sellers have credentials
+  for (const s of sellers) {
+    try {
+      const r = await fetch(`/admin/sellers/${s.id}/creds`);
+      credsStatus[s.id] = r.ok;
+    } catch { credsStatus[s.id] = false; }
+  }
+  renderTable();
+}
+
+function renderTable() {
+  const tbody = document.getElementById('sellers-body');
+  const formsDiv = document.getElementById('creds-forms');
+
+  tbody.innerHTML = sellers.map(s => `
+    <tr>
+      <td style="color:var(--muted);font-family:'JetBrains Mono',monospace">${s.id}</td>
+      <td style="font-weight:600">${s.username}</td>
+      <td><span class="tag ${s.is_admin ? 'tag-admin' : 'tag-seller'}">${s.is_admin ? 'Admin' : 'Seller'}</span></td>
+      <td><span class="tag ${credsStatus[s.id] ? 'tag-ok' : 'tag-missing'}">${credsStatus[s.id] ? '✓ Set' : '✗ Missing'}</span></td>
+      <td style="display:flex;gap:8px">
+        <button class="btn btn-secondary" onclick="toggleCreds(${s.id})">${credsStatus[s.id] ? 'Edit Credentials' : 'Set Credentials'}</button>
+        ${!s.is_admin ? `<button class="btn btn-danger" onclick="deleteSeller(${s.id}, '${s.username}')">Delete</button>` : ''}
+      </td>
+    </tr>
+  `).join('');
+
+  formsDiv.innerHTML = sellers.map(s => `
+    <div class="section creds-form" id="creds-${s.id}">
+      <h3>SP-API Credentials — ${s.username}</h3>
+      <div class="form-row">
+        <div class="form-group full">
+          <label>Refresh Token</label>
+          <input type="text" id="c${s.id}-refresh_token" placeholder="Atzr|..." />
+        </div>
+        <div class="form-group">
+          <label>LWA App ID (Client ID)</label>
+          <input type="text" id="c${s.id}-lwa_app_id" placeholder="amzn1.application-oa2-client...." />
+        </div>
+        <div class="form-group">
+          <label>LWA Client Secret</label>
+          <input type="text" id="c${s.id}-lwa_client_secret" placeholder="amzn1.oa2-cs.v1...." />
+        </div>
+        <div class="form-group">
+          <label>AWS Access Key</label>
+          <input type="text" id="c${s.id}-aws_access_key" placeholder="AKIA..." />
+        </div>
+        <div class="form-group">
+          <label>AWS Secret Key</label>
+          <input type="password" id="c${s.id}-aws_secret_key" placeholder="••••••••" />
+        </div>
+        <div class="form-group">
+          <label>Role ARN</label>
+          <input type="text" id="c${s.id}-role_arn" placeholder="arn:aws:iam::..." />
+        </div>
+        <div class="form-group">
+          <label>Amazon Seller ID (Merchant Token)</label>
+          <input type="text" id="c${s.id}-seller_id_amz" placeholder="A1B2C3..." />
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <button class="btn btn-primary" onclick="saveCreds(${s.id})">Save Credentials</button>
+        <button class="btn btn-secondary" onclick="toggleCreds(${s.id})">Cancel</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleCreds(id) {
+  const el = document.getElementById(`creds-${id}`);
+  el.classList.toggle('open');
+  if (el.classList.contains('open')) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+async function createSeller() {
+  const username = document.getElementById('new-username').value.trim();
+  const password = document.getElementById('new-password').value;
+  if (!username || !password) return showToast('Fill in username and password', 'error');
+
+  const res = await fetch('/admin/sellers', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ username, password })
+  });
+  const data = await res.json();
+  if (res.ok) {
+    showToast(`Seller "${username}" created`, 'success');
+    document.getElementById('new-username').value = '';
+    document.getElementById('new-password').value = '';
+    loadSellers();
+  } else {
+    showToast(data.detail || 'Error creating seller', 'error');
+  }
+}
+
+async function deleteSeller(id, username) {
+  if (!confirm(`Delete seller "${username}"? This will also delete all their listings.`)) return;
+  const res = await fetch(`/admin/sellers/${id}`, { method: 'DELETE' });
+  if (res.ok) { showToast(`Seller "${username}" deleted`, 'success'); loadSellers(); }
+  else showToast('Error deleting seller', 'error');
+}
+
+async function saveCreds(id) {
+  const fields = ['refresh_token','lwa_app_id','lwa_client_secret','aws_access_key','aws_secret_key','role_arn','seller_id_amz'];
+  const body = {};
+  for (const f of fields) {
+    const val = document.getElementById(`c${id}-${f}`).value.trim();
+    if (!val) return showToast(`Fill in all credential fields`, 'error');
+    body[f] = val;
+  }
+
+  const res = await fetch(`/admin/sellers/${id}/creds`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body)
+  });
+  if (res.ok) {
+    showToast('Credentials saved', 'success');
+    credsStatus[id] = true;
+    document.getElementById(`creds-${id}`).classList.remove('open');
+    renderTable();
+  } else {
+    showToast('Error saving credentials', 'error');
+  }
+}
+
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type}`;
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 3000);
+}
+
+loadSellers();
+</script>
+</body>
+</html>
