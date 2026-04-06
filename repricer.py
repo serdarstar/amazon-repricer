@@ -63,7 +63,7 @@ def _reprice_one(listing: dict[str, Any], credentials: dict, seller_id_amz: str,
         return result
 
     # ── 4. Push update ────────────────────────────────────────────────────
-    success = update_price(sku, target, credentials, seller_id_amz)
+    success = update_price(sku, target, credentials, seller_id_amz, asin=asin)
     if success:
         result["new_price"] = target
         result["action"]    = "REPRICED"

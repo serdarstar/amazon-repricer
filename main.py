@@ -306,7 +306,7 @@ def get_stats(request: Request) -> dict:
 @app.get("/api/health")
 def api_health(request: Request) -> dict:
     """Live SP-API connectivity test for the current seller."""
-    from amazon_api import get_buy_box_price
+    from amazon_api import get_buy_box_price, _build_credentials
     seller_id = _get_current_seller(request)["id"]
     conn = get_db()
     creds_row = conn.execute(
@@ -322,7 +322,7 @@ def api_health(request: Request) -> dict:
     if not creds_row:
         return {"ok": False, "message": "No SP-API credentials configured", "tested_at": tested_at}
 
-    credentials = dict(creds_row)
+    credentials = _build_credentials(dict(creds_row))
     test_asin = listing_row["asin"] if listing_row else "B084NZLX89"
 
     try:

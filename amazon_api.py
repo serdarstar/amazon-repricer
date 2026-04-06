@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
-from sp_api.api import Products, ListingsItems
+from sp_api.api import Products, ListingsItems, CatalogItems
 from sp_api.base import Marketplaces, SellingApiException
 
 from config import config
@@ -19,6 +19,9 @@ from config import config
 logger = logging.getLogger(__name__)
 
 _MARKETPLACE = Marketplaces.UK
+
+# Cache product types so we don't look them up on every reprice cycle
+_product_type_cache: dict[str, str] = {}
 
 
 def _build_credentials(seller: dict) -> dict:
@@ -31,6 +34,31 @@ def _build_credentials(seller: dict) -> dict:
         "aws_secret_key":    seller["aws_secret_key"],
         "role_arn":          seller["role_arn"],
     }
+
+
+def _get_product_type(asin: str, credentials: dict) -> str:
+    """
+    Look up the correct product type for an ASIN from the Amazon catalog.
+    Falls back to 'PRODUCT' if unavailable.
+    """
+    if asin in _product_type_cache:
+        return _product_type_cache[asin]
+    try:
+        api = CatalogItems(credentials=credentials, marketplace=_MARKETPLACE)
+        resp = api.get_catalog_item(
+            asin=asin,
+            marketplaceIds=[config.MARKETPLACE_ID],
+            includedData=["productTypes"],
+        )
+        for pt in resp.payload.get("productTypes", []):
+            if pt.get("marketplaceId") == config.MARKETPLACE_ID:
+                product_type = pt["productType"]
+                _product_type_cache[asin] = product_type
+                logger.info("Product type for ASIN=%s: %s", asin, product_type)
+                return product_type
+    except Exception as exc:
+        logger.warning("Could not fetch product type for ASIN=%s: %s", asin, exc)
+    return "PRODUCT"
 
 
 def get_buy_box_price(asin: str, credentials: dict) -> Optional[float]:
@@ -59,16 +87,19 @@ def get_buy_box_price(asin: str, credentials: dict) -> Optional[float]:
         return None
 
 
-def update_price(sku: str, new_price: float, credentials: dict, seller_id_amz: str) -> bool:
+def update_price(sku: str, new_price: float, credentials: dict, seller_id_amz: str, asin: str = "") -> bool:
     """
     Patch the listing price for *sku* using the Listings Items API v2021-08-01.
+    Uses the correct product type from the Amazon catalog.
     Returns True if Amazon accepted the request.
     """
     try:
+        product_type = _get_product_type(asin, credentials) if asin else "PRODUCT"
+
         api = ListingsItems(credentials=credentials, marketplace=_MARKETPLACE)
 
         body = {
-            "productType": "PRODUCT",
+            "productType": product_type,
             "patches": [
                 {
                     "op": "replace",
@@ -101,16 +132,16 @@ def update_price(sku: str, new_price: float, credentials: dict, seller_id_amz: s
         status = payload.get("status", "")
         issues = payload.get("submissionIssues", [])
         if issues:
-            logger.warning(
-                "SP-API submission issues  SKU=%s  issues=%s", sku, issues
-            )
+            logger.warning("SP-API submission issues  SKU=%s  issues=%s", sku, issues)
         if status == "ACCEPTED":
-            logger.info("Price updated  SKU=%s  new=£%.2f  issues=%s", sku, new_price, issues)
+            logger.info(
+                "Price updated  SKU=%s  ASIN=%s  productType=%s  new=£%.2f  issues=%s",
+                sku, asin, product_type, new_price, issues,
+            )
             return True
 
         logger.warning(
-            "Unexpected status from patch_listings_item  SKU=%s  status=%s  payload=%s",
-            sku, status, payload,
+            "Unexpected status  SKU=%s  status=%s  payload=%s", sku, status, payload,
         )
         return False
 

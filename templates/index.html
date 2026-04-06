@@ -905,7 +905,7 @@ async function deleteListing(sku) {
 async function forcePush(sku) {
   if (!confirm(`Force push price for "${sku}" to Amazon now?\nThis bypasses the "no change" check and sends the price directly to SP-API.`)) return;
   try {
-    progress(true);
+    showProgress(true);
     const r = await fetch(`/api/reprice/force/${encodeURIComponent(sku)}`, { method: 'POST' });
     const d = await r.json();
     if (!r.ok) { toast(d.detail || 'Force push failed', 'error'); return; }
@@ -914,8 +914,8 @@ async function forcePush(sku) {
     else if (action === 'FAILED') toast(`${sku}: Amazon rejected the update — check logs`, 'error');
     else toast(`${sku}: ${d.reason || action}`, 'info');
     fetchListings(); fetchStats(); fetchLogs();
-  } catch(e) { toast('Force push failed', 'error'); }
-  finally { progress(false); }
+  } catch(e) { toast('Force push error: ' + (e.message || e), 'error'); console.error('forcePush error', e); }
+  finally { showProgress(false); }
 }
 
 // ── Add / Edit modal ──────────────────────────────────────────────────────
