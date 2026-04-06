@@ -97,13 +97,20 @@ def update_price(sku: str, new_price: float, credentials: dict, seller_id_amz: s
             body=body,
         )
 
-        status = resp.payload.get("status", "")
+        payload = resp.payload
+        status = payload.get("status", "")
+        issues = payload.get("submissionIssues", [])
+        if issues:
+            logger.warning(
+                "SP-API submission issues  SKU=%s  issues=%s", sku, issues
+            )
         if status == "ACCEPTED":
-            logger.info("Price updated  SKU=%s  new=£%.2f", sku, new_price)
+            logger.info("Price updated  SKU=%s  new=£%.2f  issues=%s", sku, new_price, issues)
             return True
 
         logger.warning(
-            "Unexpected status from patch_listings_item  SKU=%s  status=%s", sku, status
+            "Unexpected status from patch_listings_item  SKU=%s  status=%s  payload=%s",
+            sku, status, payload,
         )
         return False
 

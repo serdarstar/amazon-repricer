@@ -30,6 +30,7 @@ GET    /api/me                            → Current session info
 """
 from __future__ import annotations
 import logging
+from datetime import datetime, timezone
 from typing import Optional
 
 import uvicorn
@@ -43,7 +44,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from config import config
 from database import get_db, init_db, seed_admin
-from repricer import run_repricer
+from repricer import run_repricer, force_push_sku
 
 logging.basicConfig(
     level=logging.INFO,
@@ -299,6 +300,43 @@ def get_stats(request: Request) -> dict:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# SP-API Health check
+# ══════════════════════════════════════════════════════════════════════════════
+
+@app.get("/api/health")
+def api_health(request: Request) -> dict:
+    """Live SP-API connectivity test for the current seller."""
+    from amazon_api import get_buy_box_price
+    seller_id = _get_current_seller(request)["id"]
+    conn = get_db()
+    creds_row = conn.execute(
+        "SELECT * FROM seller_credentials WHERE seller_id = ?", (seller_id,)
+    ).fetchone()
+    listing_row = conn.execute(
+        "SELECT asin FROM listings WHERE seller_id = ? LIMIT 1", (seller_id,)
+    ).fetchone()
+    conn.close()
+
+    tested_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    if not creds_row:
+        return {"ok": False, "message": "No SP-API credentials configured", "tested_at": tested_at}
+
+    credentials = dict(creds_row)
+    test_asin = listing_row["asin"] if listing_row else "B084NZLX89"
+
+    try:
+        price = get_buy_box_price(test_asin, credentials)
+        if price is not None:
+            msg = f"Connected — Buy Box for {test_asin}: £{price:.2f}"
+        else:
+            msg = f"Connected — no Buy Box winner for {test_asin}"
+        return {"ok": True, "message": msg, "tested_at": tested_at}
+    except Exception as exc:
+        return {"ok": False, "message": str(exc), "tested_at": tested_at}
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # Listings CRUD
 # ══════════════════════════════════════════════════════════════════════════════
 
@@ -379,6 +417,15 @@ def manual_reprice(request: Request, background_tasks: BackgroundTasks) -> dict:
     seller_id = _get_current_seller(request)["id"]
     background_tasks.add_task(run_repricer, seller_id)
     return {"message": "Repricing started"}
+
+
+@app.post("/api/reprice/force/{sku}")
+def force_reprice(sku: str, request: Request) -> dict:
+    seller_id = _get_current_seller(request)["id"]
+    result = force_push_sku(sku, seller_id)
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+    return result
 
 
 @app.get("/api/reprice/logs")

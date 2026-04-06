@@ -18,7 +18,7 @@ from amazon_api import get_buy_box_price, update_price, _build_credentials
 logger = logging.getLogger(__name__)
 
 
-def _reprice_one(listing: dict[str, Any], credentials: dict, seller_id_amz: str) -> dict[str, Any]:
+def _reprice_one(listing: dict[str, Any], credentials: dict, seller_id_amz: str, force: bool = False) -> dict[str, Any]:
     """Process a single listing and return an action result dict."""
     sku           = listing["sku"]
     asin          = listing["asin"]
@@ -57,7 +57,7 @@ def _reprice_one(listing: dict[str, Any], credentials: dict, seller_id_amz: str)
         result["reason"] = f"Matching Buy Box at £{buy_box:.2f}"
 
     # ── 3. Skip if already correct ────────────────────────────────────────
-    if abs(target - current_price) < 0.005:
+    if abs(target - current_price) < 0.005 and not force:
         result["action"] = "NO_CHANGE"
         result["reason"] = f"Already at target £{target:.2f}"
         return result
@@ -72,6 +72,52 @@ def _reprice_one(listing: dict[str, Any], credentials: dict, seller_id_amz: str)
         result["reason"] = "SP-API price update was rejected or failed"
 
     return result
+
+
+def force_push_sku(sku: str, seller_id: int) -> dict[str, Any]:
+    """Force-push the current target price for one SKU to Amazon, bypassing NO_CHANGE check."""
+    conn = get_db()
+    cursor = conn.cursor()
+
+    creds_row = cursor.execute(
+        "SELECT * FROM seller_credentials WHERE seller_id = ?", (seller_id,)
+    ).fetchone()
+    if not creds_row:
+        conn.close()
+        return {"error": "No credentials found"}
+
+    listing_row = cursor.execute(
+        "SELECT * FROM listings WHERE sku = ? AND seller_id = ?", (sku, seller_id)
+    ).fetchone()
+    if not listing_row:
+        conn.close()
+        return {"error": "Listing not found"}
+
+    credentials   = _build_credentials(dict(creds_row))
+    seller_id_amz = creds_row["seller_id_amz"]
+    listing       = dict(listing_row)
+
+    try:
+        res = _reprice_one(listing, credentials, seller_id_amz, force=True)
+    except Exception as exc:
+        conn.close()
+        return {"error": str(exc)}
+
+    cursor.execute(
+        """UPDATE listings SET buy_box_price = ?, current_price = ?, last_repriced = ?
+            WHERE sku = ? AND seller_id = ?""",
+        (res["buy_box_price"], res["new_price"], datetime.now().isoformat(), sku, seller_id),
+    )
+    cursor.execute(
+        """INSERT INTO reprice_log
+               (seller_id, sku, asin, old_price, new_price, buy_box_price, action, reason)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+        (seller_id, res["sku"], res["asin"], res["old_price"], res["new_price"],
+         res["buy_box_price"], res["action"], res["reason"]),
+    )
+    conn.commit()
+    conn.close()
+    return res
 
 
 def run_repricer(seller_id: Optional[int] = None) -> list[dict[str, Any]]:

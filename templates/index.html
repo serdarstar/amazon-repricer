@@ -136,6 +136,16 @@
   .stat-orange .stat-value { color: var(--orange); }
   .stat-green  .stat-value { color: var(--green); }
 
+  /* ── API Status bar ────────────────────────────────────────── */
+  .api-status-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 18px;
+    margin-bottom: 20px;
+  }
+  .api-status-bar.ok   { border-left: 3px solid var(--green); }
+  .api-status-bar.fail { border-left: 3px solid var(--red); }
+
   /* ── Toolbar ─────────────────────────────────────────────────── */
   .toolbar {
     display: flex; align-items: center; justify-content: space-between;
@@ -427,6 +437,21 @@
     </div>
   </div>
 
+  <!-- API Status -->
+  <div class="api-status-bar" id="api-status-bar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="status-dot dot-orange" id="api-dot"></span>
+      <div>
+        <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:2px">SP-API Status</div>
+        <div id="api-status-msg" style="font-size:13px;font-weight:500;color:var(--text)">Checking connection…</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px">
+      <span id="api-tested-at" style="font-size:12px;color:var(--muted)"></span>
+      <button class="btn btn-ghost" style="padding:5px 14px;font-size:12px" onclick="testApiHealth()">Test Now</button>
+    </div>
+  </div>
+
   <!-- Toolbar -->
   <div class="toolbar">
     <div style="display:flex;align-items:center;gap:16px">
@@ -694,6 +719,29 @@ async function fetchStats() {
   } catch(e) { console.error('stats fetch error', e); }
 }
 
+async function testApiHealth() {
+  const bar  = $('api-status-bar');
+  const dot  = $('api-dot');
+  const msg  = $('api-status-msg');
+  const time = $('api-tested-at');
+  dot.className  = 'status-dot dot-orange';
+  msg.textContent = 'Testing connection…';
+  bar.className  = 'api-status-bar';
+  try {
+    const r = await fetch('/api/health');
+    const d = await r.json();
+    dot.className  = d.ok ? 'status-dot dot-green' : 'status-dot dot-red';
+    msg.textContent = d.message || (r.ok ? 'Connected' : `Error ${r.status}`);
+    bar.className  = 'api-status-bar ' + (d.ok ? 'ok' : 'fail');
+    const now = new Date();
+    time.textContent = 'Tested at ' + now.toLocaleTimeString();
+  } catch(e) {
+    dot.className  = 'status-dot dot-red';
+    msg.textContent = 'Could not reach server';
+    bar.className  = 'api-status-bar fail';
+  }
+}
+
 async function fetchListings() {
   showProgress(true);
   try {
@@ -753,6 +801,7 @@ function renderListings(data) {
             <span class="slider"></span>
           </label>
           <button class="icon-btn" onclick="openEditModal('${l.sku}')" title="Edit">✎</button>
+          <button class="icon-btn" onclick="forcePush('${l.sku}')" title="Force push price to Amazon now">⟳</button>
           <button class="icon-btn del" onclick="deleteListing('${l.sku}')" title="Delete">🗑</button>
         </div>
       </td>
@@ -849,6 +898,24 @@ async function deleteListing(sku) {
     toast(`${sku} deleted`, 'success');
     fetchListings(); fetchStats();
   } catch(e) { toast('Delete failed', 'error'); }
+}
+
+// ── Force push ────────────────────────────────────────────────────────────
+
+async function forcePush(sku) {
+  if (!confirm(`Force push price for "${sku}" to Amazon now?\nThis bypasses the "no change" check and sends the price directly to SP-API.`)) return;
+  try {
+    progress(true);
+    const r = await fetch(`/api/reprice/force/${encodeURIComponent(sku)}`, { method: 'POST' });
+    const d = await r.json();
+    if (!r.ok) { toast(d.detail || 'Force push failed', 'error'); return; }
+    const action = d.action;
+    if (action === 'REPRICED') toast(`${sku} → £${d.new_price.toFixed(2)} sent to Amazon`, 'success');
+    else if (action === 'FAILED') toast(`${sku}: Amazon rejected the update — check logs`, 'error');
+    else toast(`${sku}: ${d.reason || action}`, 'info');
+    fetchListings(); fetchStats(); fetchLogs();
+  } catch(e) { toast('Force push failed', 'error'); }
+  finally { progress(false); }
 }
 
 // ── Add / Edit modal ──────────────────────────────────────────────────────
@@ -951,6 +1018,7 @@ setInterval(refreshAll, 60_000);
 // ── Bootstrap ────────────────────────────────────────────────────────────
 
 refreshAll();
+testApiHealth();
 </script>
 </body>
 </html>
