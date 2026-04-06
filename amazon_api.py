@@ -64,6 +64,8 @@ def _get_product_type(asin: str, credentials: dict) -> str:
 def get_buy_box_price(asin: str, credentials: dict) -> Optional[float]:
     """
     Return the current Buy Box price for *asin* on Amazon UK, or None if unavailable.
+    Checks CompetitivePrices (third-party buy box) first, then BuyBoxPrices
+    (which includes Amazon retail as the buy box holder).
     """
     try:
         api = Products(credentials=credentials, marketplace=_MARKETPLACE)
@@ -73,10 +75,20 @@ def get_buy_box_price(asin: str, credentials: dict) -> Optional[float]:
             if item.get("ASIN") != asin:
                 continue
             comp = item.get("Product", {}).get("CompetitivePricing", {})
+
+            # CompetitivePriceId=1 → third-party buy box winner
             for cp in comp.get("CompetitivePrices", []):
                 if str(cp.get("CompetitivePriceId")) == "1":
                     amount = cp["Price"]["LandedPrice"]["Amount"]
                     return float(amount)
+
+            # Fall back to BuyBoxPrices — includes Amazon retail as winner
+            for bp in comp.get("BuyBoxPrices", []):
+                if bp.get("condition", "").lower() in ("new", "used"):
+                    amount = bp["LandedPrice"]["Amount"]
+                    logger.info("Buy box held by Amazon retail  ASIN=%s  price=£%.2f", asin, amount)
+                    return float(amount)
+
         return None
 
     except SellingApiException as exc:
