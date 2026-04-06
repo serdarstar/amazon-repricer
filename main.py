@@ -507,6 +507,10 @@ def create_seller(seller: SellerCreate, request: Request) -> dict:
 def delete_seller(sid: int, request: Request) -> dict:
     _require_admin(request)
     conn = get_db()
+    conn.execute("DELETE FROM seller_credentials WHERE seller_id = ?", (sid,))
+    conn.execute("DELETE FROM reprice_log WHERE seller_id = ?", (sid,))
+    conn.execute("DELETE FROM listings WHERE seller_id = ?", (sid,))
+    conn.execute("DELETE FROM settings WHERE seller_id = ?", (sid,))
     conn.execute("DELETE FROM sellers WHERE id = ? AND is_admin = 0", (sid,))
     conn.commit()
     conn.close()
