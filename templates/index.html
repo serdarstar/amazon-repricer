@@ -781,7 +781,7 @@ function renderListings(data) {
   tbody.innerHTML = data.map(l => `
     <tr>
       <td class="sku-cell">${l.sku}</td>
-      <td class="asin-cell">${l.asin}</td>
+      <td class="asin-cell"><a href="https://www.amazon.co.uk/dp/${l.asin}" target="_blank" rel="noopener" style="color:var(--muted);text-decoration:none;" onmouseover="this.style.color='var(--orange)'" onmouseout="this.style.color='var(--muted)'">${l.asin}</a></td>
       <td class="title-cell" title="${l.title||''}">${l.title || '<span style="color:var(--muted)">—</span>'}</td>
       <td class="mono price-current">${fmt(l.current_price)}</td>
       <td class="mono price-bb">${fmt(l.buy_box_price)}</td>

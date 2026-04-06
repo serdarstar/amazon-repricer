@@ -9,6 +9,7 @@ Logic:
 """
 from __future__ import annotations
 import logging
+import time
 from datetime import datetime
 from typing import Any, Optional
 
@@ -157,6 +158,7 @@ def run_repricer(seller_id: Optional[int] = None) -> list[dict[str, Any]]:
 
         for row in listings:
             listing = dict(row)
+            time.sleep(2)  # avoid SP-API rate limits between listings
             try:
                 res = _reprice_one(listing, credentials, seller_id_amz)
             except Exception as exc:
