@@ -82,10 +82,7 @@
     padding: 8px 8px 16px; border-top: 1px solid var(--border);
     display: flex; flex-direction: column; gap: 2px;
   }
-  .user-badge {
-    display: flex; align-items: center; gap: 8px;
-    padding: 10px 12px; margin-bottom: 4px;
-  }
+  .user-badge { display: flex; align-items: center; gap: 8px; padding: 10px 12px; margin-bottom: 4px; }
   .user-avatar {
     width: 28px; height: 28px; border-radius: 50%;
     background: rgba(255,153,0,.2); border: 1px solid rgba(255,153,0,.3);
@@ -123,186 +120,167 @@
   .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
   .btn-ghost { background: transparent; color: var(--label); border: 1px solid var(--border2); }
   .btn-ghost:hover { border-color: var(--orange); color: var(--orange); }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
 
   /* ── Content ── */
-  .container { max-width: 1100px; margin: 0 auto; padding: 32px 28px; }
+  .container { max-width: 1400px; margin: 0 auto; padding: 28px 28px; }
 
-  /* ── Search box ── */
-  .search-hero {
-    text-align: center; margin-bottom: 36px;
-  }
-  .search-hero-title {
-    font-family: var(--font-head); font-size: 26px; font-weight: 800;
-    color: #fff; margin-bottom: 6px;
-  }
-  .search-hero-title span { color: var(--orange); }
-  .search-hero-sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
-
-  .search-bar {
-    display: flex; gap: 10px; max-width: 520px; margin: 0 auto;
-  }
-  .asin-input {
-    flex: 1; background: var(--card); border: 1px solid var(--border2);
-    color: var(--text); border-radius: 10px;
-    padding: 12px 16px; font-size: 15px;
-    font-family: var(--font-mono); outline: none; transition: border-color .15s;
-    letter-spacing: .08em;
-  }
-  .asin-input::placeholder { color: var(--muted); font-family: var(--font-body); font-size: 14px; letter-spacing: 0; }
-  .asin-input:focus { border-color: var(--orange); }
-
-  /* ── Loading spinner ── */
-  .spinner {
-    display: none; margin: 60px auto; text-align: center;
-  }
-  .spinner.show { display: block; }
-  .spin-ring {
-    display: inline-block; width: 40px; height: 40px;
-    border: 3px solid var(--border); border-top-color: var(--orange);
-    border-radius: 50%; animation: spin .8s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .spinner p { margin-top: 12px; color: var(--muted); font-size: 13px; }
-
-  /* ── Error state ── */
-  .error-state { display: none; text-align: center; padding: 48px 20px; }
-  .error-state.show { display: block; }
-  .error-icon { font-size: 36px; margin-bottom: 12px; }
-  .error-msg { color: var(--red); font-size: 14px; font-weight: 500; }
-  .error-hint { color: var(--muted); font-size: 12px; margin-top: 6px; }
-
-  /* ── Results ── */
-  .results { display: none; }
-  .results.show { display: block; }
-
-  /* Product hero card */
-  .product-hero {
+  /* ── Input panel ── */
+  .input-panel {
     background: var(--card); border: 1px solid var(--border);
-    border-radius: 14px; padding: 24px;
-    display: flex; gap: 24px; margin-bottom: 20px;
-    align-items: flex-start;
+    border-radius: 14px; padding: 24px; margin-bottom: 24px;
   }
-  .product-img {
-    width: 120px; height: 120px; object-fit: contain;
-    border-radius: 8px; background: #fff; padding: 8px;
-    flex-shrink: 0;
-  }
-  .product-img-placeholder {
-    width: 120px; height: 120px; border-radius: 8px;
-    background: var(--surface); border: 1px solid var(--border);
-    display: grid; place-items: center; font-size: 36px; flex-shrink: 0;
-  }
-  .product-info { flex: 1; min-width: 0; }
-  .product-title {
-    font-family: var(--font-head); font-size: 18px; font-weight: 700;
-    color: #fff; margin-bottom: 8px; line-height: 1.4;
-  }
-  .product-meta {
-    display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;
-  }
-  .meta-chip {
-    display: inline-flex; align-items: center; gap: 5px;
-    padding: 4px 10px; border-radius: 20px;
-    font-size: 12px; font-weight: 500;
-    background: var(--surface); border: 1px solid var(--border);
-    color: var(--label);
-  }
-  .meta-chip .chip-icon { font-size: 11px; }
-  .asin-display {
-    font-family: var(--font-mono); font-size: 13px; color: var(--muted);
-    display: flex; align-items: center; gap: 8px;
-  }
-  .asin-link {
-    color: var(--orange-lt); text-decoration: none; font-size: 12px;
-    border: 1px solid rgba(255,153,0,.2); padding: 2px 8px; border-radius: 4px;
-    transition: all .15s;
-  }
-  .asin-link:hover { background: rgba(255,153,0,.1); }
-
-  /* Stats row */
-  .stats-row {
-    display: grid; grid-template-columns: repeat(4, 1fr);
-    gap: 12px; margin-bottom: 20px;
-  }
-  .stat-box {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 12px; padding: 18px 20px;
-    transition: border-color .2s;
-  }
-  .stat-box:hover { border-color: var(--border2); }
-  .stat-box-label {
-    font-size: 11px; font-weight: 600; text-transform: uppercase;
-    letter-spacing: .07em; color: var(--muted); margin-bottom: 10px;
-    display: flex; align-items: center; gap: 6px;
-  }
-  .stat-box-value {
-    font-family: var(--font-head); font-size: 26px; font-weight: 700; color: #fff;
-  }
-  .stat-box-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
-  .stat-box.buybox .stat-box-value { color: var(--orange); }
-  .stat-box.green  .stat-box-value { color: var(--green); }
-  .stat-box.red    .stat-box-value { color: var(--red); }
-  .stat-box.blue   .stat-box-value { color: var(--blue); }
-
-  /* Bottom row */
-  .bottom-row {
-    display: grid; grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-
-  /* Fee breakdown */
-  .section-card {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 12px; padding: 20px 22px;
-  }
-  .section-title {
-    font-family: var(--font-head); font-size: 14px; font-weight: 700;
+  .input-panel-title {
+    font-family: var(--font-head); font-size: 15px; font-weight: 700;
     color: #fff; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
   }
-  .fee-row {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 9px 0; border-bottom: 1px solid var(--border);
-    font-size: 13px;
+  .input-row { display: flex; gap: 12px; align-items: flex-start; }
+  .asin-textarea {
+    flex: 1; background: var(--surface); border: 1px solid var(--border2);
+    color: var(--text); border-radius: 10px;
+    padding: 12px 14px; font-size: 13px;
+    font-family: var(--font-mono); outline: none; transition: border-color .15s;
+    resize: vertical; min-height: 80px; max-height: 200px;
+    line-height: 1.7; letter-spacing: .04em;
   }
-  .fee-row:last-child { border-bottom: none; }
-  .fee-name { color: var(--label); }
-  .fee-amount { font-family: var(--font-mono); font-weight: 600; color: var(--text); }
-  .fee-amount.red    { color: var(--red); }
-  .fee-amount.green  { color: var(--green); }
-  .fee-amount.orange { color: var(--orange); }
-  .fee-row.total {
-    margin-top: 4px; padding-top: 12px; border-top: 1px solid var(--border2);
-    border-bottom: none;
-  }
-  .fee-row.total .fee-name { color: var(--text); font-weight: 600; }
-  .fee-row.total .fee-amount { font-size: 15px; }
+  .asin-textarea::placeholder { color: var(--muted); font-family: var(--font-body); font-size: 13px; letter-spacing: 0; }
+  .asin-textarea:focus { border-color: var(--orange); }
 
-  /* Profit calculator */
-  .calc-input-group {
-    display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px;
-  }
-  .calc-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--label); }
-  .calc-input {
-    background: var(--surface); border: 1px solid var(--border2);
-    color: var(--text); border-radius: 8px; padding: 10px 14px;
-    font-size: 16px; font-family: var(--font-mono); font-weight: 600;
-    outline: none; transition: border-color .15s; width: 100%;
-  }
-  .calc-input:focus { border-color: var(--orange); }
+  .input-actions { display: flex; flex-direction: column; gap: 8px; min-width: 140px; }
 
-  .profit-result {
+  /* File drop zone */
+  .drop-zone {
+    border: 2px dashed var(--border2); border-radius: 10px;
+    padding: 14px 16px; text-align: center;
+    cursor: pointer; transition: all .2s;
+    color: var(--muted); font-size: 12px; line-height: 1.5;
+  }
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--orange); color: var(--orange);
+    background: rgba(255,153,0,.05);
+  }
+  .drop-zone-icon { font-size: 20px; margin-bottom: 4px; }
+  #file-input { display: none; }
+
+  .input-hints { margin-top: 12px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .hint-chip {
+    font-size: 11px; color: var(--muted);
+    display: flex; align-items: center; gap: 4px;
+  }
+
+  /* Cost price bar */
+  .cost-bar {
+    display: flex; align-items: center; gap: 12px;
     background: var(--surface); border: 1px solid var(--border);
-    border-radius: 10px; padding: 16px 18px;
-    display: none;
+    border-radius: 10px; padding: 10px 16px; margin-bottom: 20px;
+    flex-wrap: wrap;
   }
-  .profit-result.show { display: block; }
-  .profit-big {
-    font-family: var(--font-head); font-size: 32px; font-weight: 800;
-    text-align: center; margin-bottom: 4px;
+  .cost-bar-label { font-size: 12px; font-weight: 600; color: var(--label); white-space: nowrap; }
+  .cost-input-inline {
+    background: var(--card); border: 1px solid var(--border2);
+    color: var(--text); border-radius: 7px; padding: 7px 12px;
+    font-size: 14px; font-family: var(--font-mono); font-weight: 600;
+    outline: none; transition: border-color .15s; width: 120px;
   }
-  .profit-big.positive { color: var(--green); }
-  .profit-big.negative { color: var(--red); }
-  .profit-pct { text-align: center; font-size: 13px; color: var(--muted); margin-bottom: 14px; }
+  .cost-input-inline:focus { border-color: var(--orange); }
+  .cost-hint { font-size: 11px; color: var(--muted); }
+
+  /* ── Progress ── */
+  .progress-section { margin-bottom: 20px; display: none; }
+  .progress-section.show { display: block; }
+  .progress-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8px;
+  }
+  .progress-label { font-size: 13px; font-weight: 500; color: var(--text); }
+  .progress-count { font-size: 12px; color: var(--muted); font-family: var(--font-mono); }
+  .progress-track {
+    height: 4px; background: var(--border); border-radius: 4px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; background: var(--orange); border-radius: 4px;
+    transition: width .3s ease;
+  }
+
+  /* ── Results table ── */
+  .results-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .results-count { font-size: 13px; color: var(--muted); }
+  .results-count strong { color: var(--text); }
+
+  .table-wrap {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden;
+    overflow-x: auto;
+  }
+
+  table { width: 100%; border-collapse: collapse; min-width: 900px; }
+  thead th {
+    padding: 10px 14px; background: var(--surface);
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .07em; color: var(--muted);
+    border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap;
+  }
+  thead th.right { text-align: right; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,153,0,.03); }
+  td { padding: 12px 14px; font-size: 13px; color: var(--text); vertical-align: middle; }
+  td.right { text-align: right; }
+
+  /* Product cell */
+  .product-cell { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .product-thumb {
+    width: 44px; height: 44px; object-fit: contain;
+    border-radius: 6px; background: #fff; padding: 4px;
+    flex-shrink: 0;
+  }
+  .product-thumb-placeholder {
+    width: 44px; height: 44px; border-radius: 6px;
+    background: var(--surface); border: 1px solid var(--border);
+    display: grid; place-items: center; font-size: 20px; flex-shrink: 0;
+  }
+  .product-text { min-width: 0; }
+  .product-name {
+    font-size: 13px; font-weight: 500; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 280px; display: block;
+  }
+  .product-asin {
+    font-family: var(--font-mono); font-size: 11px; color: var(--muted);
+    display: flex; align-items: center; gap: 6px; margin-top: 3px;
+  }
+  .amz-link {
+    color: var(--orange-lt); text-decoration: none; font-size: 11px;
+    border: 1px solid rgba(255,153,0,.2); padding: 1px 6px; border-radius: 3px;
+    transition: all .15s; white-space: nowrap;
+  }
+  .amz-link:hover { background: rgba(255,153,0,.1); }
+
+  .mono { font-family: var(--font-mono); }
+  .val-orange { color: var(--orange); font-weight: 600; }
+  .val-green  { color: var(--green);  font-weight: 600; }
+  .val-red    { color: var(--red);    font-weight: 600; }
+  .val-muted  { color: var(--muted); }
+
+  /* Row status */
+  .row-loading td { opacity: .6; }
+  .row-error td   { opacity: .7; }
+  .spinner-inline {
+    display: inline-block; width: 16px; height: 16px;
+    border: 2px solid var(--border); border-top-color: var(--orange);
+    border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center; padding: 60px 20px; color: var(--muted);
+  }
+  .empty-state .icon { font-size: 36px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
 
   /* Scrollbar */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -328,20 +306,12 @@
   .toast-info    { border-left: 3px solid var(--orange); }
   @keyframes toastIn { from { transform: translateX(30px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-  /* Recent history */
-  .history-bar {
-    display: flex; align-items: center; gap: 8px;
-    max-width: 520px; margin: 12px auto 0; flex-wrap: wrap;
-    justify-content: center;
+  .badge {
+    display: inline-flex; align-items: center;
+    padding: 2px 8px; border-radius: 20px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
   }
-  .history-chip {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 6px; padding: 4px 10px;
-    font-family: var(--font-mono); font-size: 12px; color: var(--muted);
-    cursor: pointer; transition: all .15s;
-  }
-  .history-chip:hover { border-color: var(--orange); color: var(--orange); }
-  .history-label { font-size: 11px; color: var(--muted); }
+  .badge-error { background: rgba(239,68,68,.1); color: var(--red); border: 1px solid rgba(239,68,68,.25); }
 </style>
 </head>
 <body>
@@ -363,7 +333,6 @@
     <a href="/analysis" class="nav-item active">
       <span class="nav-icon">🔍</span> Analysis
     </a>
-
     <span class="nav-section-label" style="margin-top:8px">Manage</span>
     <a href="/admin" class="nav-item" id="admin-link" style="display:none">
       <span class="nav-icon">⚙</span> Admin Panel
@@ -387,162 +356,93 @@
 <!-- ── Main area ── -->
 <div class="main-area">
 
-<!-- Top bar -->
 <div class="topbar">
   <div style="display:flex;align-items:center;">
     <div class="page-title">ASIN Analysis</div>
-    <span class="page-sub">Powered by Amazon SP-API</span>
+    <span class="page-sub">Bulk lookup — Buy Box, BSR, FBA fees, profit</span>
+  </div>
+  <div style="display:flex;gap:8px">
+    <button class="btn btn-ghost btn-sm" onclick="clearAll()" id="clear-btn" style="display:none">✕ Clear</button>
+    <button class="btn btn-ghost btn-sm" onclick="exportCSV()" id="export-btn" style="display:none">⬇ Export CSV</button>
   </div>
 </div>
 
-<!-- Content -->
 <div class="container">
 
-  <!-- Search hero -->
-  <div class="search-hero">
-    <div class="search-hero-title">Analyse any <span>ASIN</span></div>
-    <div class="search-hero-sub">Get real-time Buy Box price, FBA fees, BSR, offer count and profit calculator</div>
+  <!-- Input panel -->
+  <div class="input-panel">
+    <div class="input-panel-title">🔍 Enter ASINs to Analyse</div>
+    <div class="input-row">
+      <textarea id="asin-textarea" class="asin-textarea"
+        placeholder="Paste ASINs here — one per line or comma-separated&#10;e.g.&#10;B084NZLX89&#10;B0CJ6TMB9J&#10;B08XYZ12AB"></textarea>
 
-    <div class="search-bar">
-      <input
-        type="text" id="asin-input" class="asin-input"
-        placeholder="Enter ASIN  e.g. B084NZLX89"
-        maxlength="10"
-        onkeydown="if(event.key==='Enter')runAnalysis()"
-      />
-      <button class="btn btn-primary" onclick="runAnalysis()" id="analyse-btn">
-        🔍 Analyse
-      </button>
+      <div class="input-actions">
+        <button class="btn btn-primary" onclick="runBulkAnalysis()" id="analyse-btn">
+          🔍 Analyse
+        </button>
+
+        <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()"
+             ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+          <div class="drop-zone-icon">📂</div>
+          <div>Upload .txt or .csv</div>
+          <div style="font-size:10px;margin-top:2px;color:var(--muted)">or drag & drop</div>
+        </div>
+        <input type="file" id="file-input" accept=".txt,.csv,.tsv" onchange="loadFile(event)" />
+      </div>
     </div>
 
-    <div class="history-bar" id="history-bar" style="display:none">
-      <span class="history-label">Recent:</span>
-      <span id="history-chips"></span>
+    <div class="input-hints">
+      <span class="hint-chip">💡 One ASIN per line, or comma/semicolon separated</span>
+      <span class="hint-chip">📋 Paste directly from spreadsheet</span>
+      <span class="hint-chip">📂 CSV column named "ASIN" is auto-detected</span>
     </div>
   </div>
 
-  <!-- Spinner -->
-  <div class="spinner" id="spinner">
-    <div class="spin-ring"></div>
-    <p>Fetching data from Amazon SP-API…<br><span style="font-size:11px">This may take 5–10 seconds</span></p>
+  <!-- Cost price bar -->
+  <div class="cost-bar">
+    <span class="cost-bar-label">💰 Cost Price (optional):</span>
+    <input type="number" id="cost-input" class="cost-input-inline"
+           placeholder="£0.00" step="0.01" min="0"
+           oninput="recalcAllProfits()" />
+    <span class="cost-hint">Enter your cost to auto-calculate profit for all rows</span>
   </div>
 
-  <!-- Error -->
-  <div class="error-state" id="error-state">
-    <div class="error-icon">⚠️</div>
-    <div class="error-msg" id="error-msg">Something went wrong</div>
-    <div class="error-hint" id="error-hint"></div>
+  <!-- Progress -->
+  <div class="progress-section" id="progress-section">
+    <div class="progress-header">
+      <span class="progress-label" id="progress-label">Analysing ASINs…</span>
+      <span class="progress-count" id="progress-count">0 / 0</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+    </div>
   </div>
 
-  <!-- Results -->
-  <div class="results" id="results">
+  <!-- Results header -->
+  <div class="results-header" id="results-header" style="display:none">
+    <div class="results-count" id="results-count"></div>
+  </div>
 
-    <!-- Product hero -->
-    <div class="product-hero" id="product-hero">
-      <div class="product-img-placeholder" id="product-img-wrap">📦</div>
-      <div class="product-info">
-        <div class="product-title" id="product-title">—</div>
-        <div class="product-meta" id="product-meta"></div>
-        <div class="asin-display">
-          <span id="product-asin-text" style="font-size:13px"></span>
-          <a id="amazon-link" href="#" target="_blank" rel="noopener" class="asin-link">View on Amazon ↗</a>
-        </div>
-      </div>
-    </div>
-
-    <!-- Stats row -->
-    <div class="stats-row">
-      <div class="stat-box buybox">
-        <div class="stat-box-label"><span>💰</span> Buy Box Price</div>
-        <div class="stat-box-value" id="res-buybox">—</div>
-        <div class="stat-box-sub" id="res-buybox-sub"></div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-box-label"><span>👥</span> New Offers</div>
-        <div class="stat-box-value" id="res-offers">—</div>
-        <div class="stat-box-sub">competing sellers</div>
-      </div>
-      <div class="stat-box blue">
-        <div class="stat-box-label"><span>📈</span> Best Seller Rank</div>
-        <div class="stat-box-value" id="res-bsr">—</div>
-        <div class="stat-box-sub" id="res-category">in category</div>
-      </div>
-      <div class="stat-box red">
-        <div class="stat-box-label"><span>🏭</span> Total Fees (FBA)</div>
-        <div class="stat-box-value" id="res-fees">—</div>
-        <div class="stat-box-sub">at buy box price</div>
-      </div>
-    </div>
-
-    <!-- Bottom row: fee breakdown + profit calculator -->
-    <div class="bottom-row">
-
-      <!-- Fee breakdown -->
-      <div class="section-card">
-        <div class="section-title">🏭 Fee Breakdown</div>
-        <div class="fee-row">
-          <span class="fee-name">Buy Box Price</span>
-          <span class="fee-amount orange" id="fb-buybox">—</span>
-        </div>
-        <div class="fee-row">
-          <span class="fee-name">FBA Fulfilment Fee</span>
-          <span class="fee-amount red" id="fb-fba">—</span>
-        </div>
-        <div class="fee-row">
-          <span class="fee-name">Referral Fee</span>
-          <span class="fee-amount red" id="fb-referral">—</span>
-        </div>
-        <div class="fee-row">
-          <span class="fee-name">Other Fees</span>
-          <span class="fee-amount red" id="fb-other">—</span>
-        </div>
-        <div class="fee-row total">
-          <span class="fee-name">Revenue After Fees</span>
-          <span class="fee-amount green" id="fb-net">—</span>
-        </div>
-        <p style="font-size:11px;color:var(--muted);margin-top:12px;line-height:1.6">
-          * FBA fees are estimated at the Buy Box price. Actual fees may vary by product size/weight.
-        </p>
-      </div>
-
-      <!-- Profit calculator -->
-      <div class="section-card">
-        <div class="section-title">🧮 Profit Calculator</div>
-        <div class="calc-input-group">
-          <label class="calc-label">Your Cost Price (£)</label>
-          <input type="number" id="cost-input" class="calc-input"
-                 placeholder="0.00" step="0.01" min="0"
-                 oninput="calcProfit()" />
-        </div>
-        <div class="profit-result" id="profit-result">
-          <div class="profit-big" id="profit-value">£0.00</div>
-          <div class="profit-pct" id="profit-pct">0% margin</div>
-          <div>
-            <div class="fee-row">
-              <span class="fee-name">Sell Price (Buy Box)</span>
-              <span class="fee-amount orange" id="calc-sellprice">—</span>
-            </div>
-            <div class="fee-row">
-              <span class="fee-name">Total Amazon Fees</span>
-              <span class="fee-amount red" id="calc-fees">—</span>
-            </div>
-            <div class="fee-row">
-              <span class="fee-name">Your Cost</span>
-              <span class="fee-amount red" id="calc-cost">—</span>
-            </div>
-            <div class="fee-row total">
-              <span class="fee-name">Net Profit</span>
-              <span class="fee-amount" id="calc-profit">—</span>
-            </div>
-          </div>
-        </div>
-        <p id="calc-hint" style="font-size:12px;color:var(--muted);margin-top:12px;line-height:1.6">
-          Enter your cost price above to calculate your profit at the current Buy Box price.
-        </p>
-      </div>
-
-    </div><!-- /bottom-row -->
-  </div><!-- /results -->
+  <!-- Table -->
+  <div class="table-wrap" id="table-wrap" style="display:none">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:36px">#</th>
+          <th style="min-width:320px">Product</th>
+          <th class="right">Buy Box</th>
+          <th class="right">Offers</th>
+          <th class="right">BSR</th>
+          <th>Category</th>
+          <th class="right">FBA Fee</th>
+          <th class="right">Referral</th>
+          <th class="right">Net Rev.</th>
+          <th class="right profit-col" id="profit-header" style="display:none">Profit</th>
+        </tr>
+      </thead>
+      <tbody id="results-tbody"></tbody>
+    </table>
+  </div>
 
 </div><!-- /container -->
 </div><!-- /main-area -->
@@ -555,40 +455,16 @@
 
 const $ = id => document.getElementById(id);
 
-let currentData = null;
-let searchHistory = JSON.parse(localStorage.getItem('asin_history') || '[]');
+let results = [];   // array of result objects, one per ASIN
+let running = false;
 
 // ── Session ────────────────────────────────────────────────────────────────
 fetch('/api/me').then(r => r.json()).then(me => {
-  if (me.is_admin) {
-    const el = $('admin-link');
-    if (el) el.style.display = 'flex';
-  }
-  const initials = (me.username || '?')[0].toUpperCase();
-  $('user-avatar').textContent = initials;
+  if (me.is_admin) { const el = $('admin-link'); if (el) el.style.display = 'flex'; }
+  $('user-avatar').textContent = (me.username || '?')[0].toUpperCase();
   $('user-name').textContent   = me.username || '—';
   $('user-role').textContent   = me.is_admin ? 'Admin' : 'Seller';
 });
-
-// ── History ────────────────────────────────────────────────────────────────
-function renderHistory() {
-  if (!searchHistory.length) { $('history-bar').style.display = 'none'; return; }
-  $('history-bar').style.display = 'flex';
-  $('history-chips').innerHTML = searchHistory.slice(0,6).map(asin =>
-    `<span class="history-chip" onclick="loadFromHistory('${asin}')">${asin}</span>`
-  ).join('');
-}
-
-function loadFromHistory(asin) {
-  $('asin-input').value = asin;
-  runAnalysis();
-}
-
-function addToHistory(asin) {
-  searchHistory = [asin, ...searchHistory.filter(a => a !== asin)].slice(0, 10);
-  localStorage.setItem('asin_history', JSON.stringify(searchHistory));
-  renderHistory();
-}
 
 // ── Toast ──────────────────────────────────────────────────────────────────
 function toast(msg, type='info') {
@@ -600,153 +476,339 @@ function toast(msg, type='info') {
   setTimeout(() => el.remove(), 4000);
 }
 
-// ── Format helpers ─────────────────────────────────────────────────────────
+// ── Format ─────────────────────────────────────────────────────────────────
 function fmtGBP(val) {
-  if (val === null || val === undefined) return '—';
+  if (val === null || val === undefined) return '<span style="color:var(--muted)">—</span>';
   return `£${parseFloat(val).toFixed(2)}`;
 }
 function fmtNum(val) {
-  if (val === null || val === undefined) return '—';
+  if (val === null || val === undefined) return '<span style="color:var(--muted)">—</span>';
   return parseInt(val).toLocaleString('en-GB');
 }
 
-// ── Main analysis ──────────────────────────────────────────────────────────
-async function runAnalysis() {
-  const asin = $('asin-input').value.trim().toUpperCase();
-  if (!asin) { toast('Enter an ASIN first', 'error'); return; }
-  if (asin.length !== 10) { toast('ASIN must be exactly 10 characters', 'error'); return; }
+// ── Parse ASINs ────────────────────────────────────────────────────────────
+function parseASINs(text) {
+  // Split on newlines, commas, semicolons, tabs, spaces
+  const raw = text.split(/[\n,;\t ]+/)
+    .map(s => s.trim().replace(/[^A-Z0-9]/gi, '').toUpperCase())
+    .filter(s => s.length === 10);
+  return [...new Set(raw)];  // deduplicate
+}
 
-  // Reset UI
-  $('spinner').classList.add('show');
-  $('results').classList.remove('show');
-  $('error-state').classList.remove('show');
+// ── File upload ────────────────────────────────────────────────────────────
+function loadFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const text = e.target.result;
+    const asins = extractASINsFromFileContent(text, file.name);
+    if (!asins.length) { toast('No valid ASINs found in file', 'error'); return; }
+    $('asin-textarea').value = asins.join('\n');
+    toast(`Loaded ${asins.length} ASINs from ${file.name}`, 'success');
+  };
+  reader.readAsText(file);
+  event.target.value = '';  // reset so same file can be re-uploaded
+}
+
+function extractASINsFromFileContent(text, filename) {
+  // If CSV, try to find an "ASIN" column
+  if (filename.toLowerCase().endsWith('.csv')) {
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    if (lines.length > 1) {
+      const headers = lines[0].split(',').map(h => h.trim().replace(/"/g,'').toUpperCase());
+      const asinCol = headers.findIndex(h => h === 'ASIN' || h.includes('ASIN'));
+      if (asinCol >= 0) {
+        return lines.slice(1)
+          .map(l => l.split(',')[asinCol]?.trim().replace(/"/g,'').toUpperCase())
+          .filter(s => s && s.length === 10 && /^[A-Z0-9]{10}$/.test(s));
+      }
+    }
+  }
+  // Fallback: extract anything that looks like an ASIN (10 alphanumeric chars)
+  return parseASINs(text);
+}
+
+function handleDragOver(e) {
+  e.preventDefault();
+  $('drop-zone').classList.add('drag-over');
+}
+function handleDragLeave() { $('drop-zone').classList.remove('drag-over'); }
+function handleDrop(e) {
+  e.preventDefault();
+  $('drop-zone').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) {
+    const fakeEvent = { target: { files: [file], value: '' } };
+    loadFile(fakeEvent);
+  }
+}
+
+// ── Main bulk analysis ─────────────────────────────────────────────────────
+async function runBulkAnalysis() {
+  if (running) return;
+  const text  = $('asin-textarea').value.trim();
+  if (!text) { toast('Enter at least one ASIN', 'error'); return; }
+
+  const asins = parseASINs(text);
+  if (!asins.length) { toast('No valid ASINs found (each must be exactly 10 characters)', 'error'); return; }
+
+  running = true;
+  results = [];
+
+  // Setup UI
   const btn = $('analyse-btn');
   btn.disabled = true;
-  btn.textContent = '⏳ Loading…';
+  btn.textContent = '⏳ Analysing…';
 
+  $('progress-section').classList.add('show');
+  $('table-wrap').style.display = 'block';
+  $('results-header').style.display = 'flex';
+  $('clear-btn').style.display = 'none';
+  $('export-btn').style.display = 'none';
+  $('results-tbody').innerHTML = '';
+
+  // Insert skeleton rows
+  asins.forEach((asin, i) => {
+    results.push({ asin, status: 'loading', index: i });
+    $('results-tbody').insertAdjacentHTML('beforeend', skeletonRow(asin, i));
+  });
+
+  updateProgress(0, asins.length);
+
+  // Process sequentially with delay to respect rate limits
+  for (let i = 0; i < asins.length; i++) {
+    if (i > 0) await sleep(1500);  // 1.5s between calls
+    await fetchOne(asins[i], i, asins.length);
+    updateProgress(i + 1, asins.length);
+  }
+
+  running = false;
+  btn.disabled = false;
+  btn.textContent = '🔍 Analyse';
+  $('progress-label').textContent = `Done — ${asins.length} ASINs analysed`;
+  $('clear-btn').style.display = 'inline-flex';
+  $('export-btn').style.display = 'inline-flex';
+
+  const ok = results.filter(r => r.status === 'ok').length;
+  toast(`Analysed ${ok} of ${asins.length} ASINs successfully`, ok === asins.length ? 'success' : 'info');
+}
+
+async function fetchOne(asin, index, total) {
   try {
     const r = await fetch(`/api/analysis/${encodeURIComponent(asin)}`);
     const d = await r.json();
 
     if (!r.ok) {
-      showError(d.detail || `Error ${r.status}`, 'Check the ASIN is correct and your SP-API credentials are configured.');
-      return;
+      results[index] = { asin, status: 'error', error: d.detail || `Error ${r.status}`, index };
+    } else {
+      results[index] = { ...d, status: 'ok', index };
     }
-
-    currentData = d;
-    addToHistory(asin);
-    renderResults(d);
-
   } catch(e) {
-    showError('Could not reach server', e.message || '');
-  } finally {
-    $('spinner').classList.remove('show');
-    btn.disabled = false;
-    btn.textContent = '🔍 Analyse';
+    results[index] = { asin, status: 'error', error: 'Network error', index };
   }
+  rerenderRow(index);
+  updateResultsCount();
 }
 
-function showError(msg, hint='') {
-  $('spinner').classList.remove('show');
-  $('results').classList.remove('show');
-  $('error-state').classList.add('show');
-  $('error-msg').textContent  = msg;
-  $('error-hint').textContent = hint;
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ── Progress ───────────────────────────────────────────────────────────────
+function updateProgress(done, total) {
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  $('progress-fill').style.width = pct + '%';
+  $('progress-count').textContent = `${done} / ${total}`;
+  if (done < total) $('progress-label').textContent = `Analysing… (${total - done} remaining)`;
 }
 
-function renderResults(d) {
-  // Product hero
-  if (d.image_url) {
-    $('product-img-wrap').innerHTML =
-      `<img src="${d.image_url}" class="product-img" alt="Product image" onerror="this.parentNode.innerHTML='📦'" />`;
-  } else {
-    $('product-img-wrap').innerHTML = '📦';
-    $('product-img-wrap').className = 'product-img-placeholder';
+function updateResultsCount() {
+  const ok  = results.filter(r => r.status === 'ok').length;
+  const err = results.filter(r => r.status === 'error').length;
+  const tot = results.length;
+  $('results-count').innerHTML = `<strong>${tot}</strong> ASINs &nbsp;·&nbsp; <span style="color:var(--green)">${ok} ok</span>${err ? ` &nbsp;·&nbsp; <span style="color:var(--red)">${err} failed</span>` : ''}`;
+}
+
+// ── Rows ───────────────────────────────────────────────────────────────────
+function skeletonRow(asin, i) {
+  return `<tr id="row-${i}" class="row-loading">
+    <td class="val-muted" style="font-family:var(--font-mono)">${i + 1}</td>
+    <td><div class="product-cell">
+      <div class="product-thumb-placeholder">⏳</div>
+      <div class="product-text">
+        <span class="product-name" style="color:var(--muted)">Loading…</span>
+        <div class="product-asin"><span>${asin}</span></div>
+      </div>
+    </div></td>
+    <td class="right"><span class="spinner-inline"></span></td>
+    <td class="right val-muted">—</td>
+    <td class="right val-muted">—</td>
+    <td class="val-muted">—</td>
+    <td class="right val-muted">—</td>
+    <td class="right val-muted">—</td>
+    <td class="right val-muted">—</td>
+    <td class="right profit-col" style="display:none">—</td>
+  </tr>`;
+}
+
+function rerenderRow(i) {
+  const d   = results[i];
+  const row = document.getElementById(`row-${i}`);
+  if (!row) return;
+
+  if (d.status === 'error') {
+    row.className = 'row-error';
+    row.innerHTML = `
+      <td class="val-muted mono">${i + 1}</td>
+      <td><div class="product-cell">
+        <div class="product-thumb-placeholder">⚠️</div>
+        <div class="product-text">
+          <span class="product-name" style="color:var(--red)">${d.error || 'Failed'}</span>
+          <div class="product-asin"><span>${d.asin}</span></div>
+        </div>
+      </div></td>
+      <td colspan="7" style="color:var(--muted);font-size:12px">SP-API error — check credentials or ASIN</td>
+      <td class="profit-col" style="display:none"></td>`;
+    return;
   }
 
-  $('product-title').textContent = d.title || 'Product title unavailable';
-  $('product-asin-text').textContent = d.asin;
-  $('amazon-link').href = `https://www.amazon.co.uk/dp/${d.asin}`;
+  row.className = '';
 
-  // Meta chips
-  const chips = [];
-  if (d.category) chips.push(`<span class="meta-chip"><span class="chip-icon">🗂</span>${d.category}</span>`);
-  if (d.bsr)      chips.push(`<span class="meta-chip"><span class="chip-icon">📈</span>BSR #${fmtNum(d.bsr)}</span>`);
-  $('product-meta').innerHTML = chips.join('');
+  const imgHtml = buildImageHtml(d);
+  const cost    = getCostPrice();
+  const profitHtml = buildProfitCell(d, cost);
 
-  // Stats row
-  $('res-buybox').textContent = d.buy_box_price ? fmtGBP(d.buy_box_price) : '—';
-  $('res-buybox-sub').textContent = d.buy_box_price ? 'current buy box' : 'no buy box winner';
-  $('res-offers').textContent = d.offer_count_new !== null ? fmtNum(d.offer_count_new) : '—';
-  $('res-bsr').textContent    = d.bsr ? '#' + fmtNum(d.bsr) : '—';
-  $('res-category').textContent = d.category || 'in category';
-  $('res-fees').textContent   = d.fba_fee ? fmtGBP(d.fba_fee) : '—';
+  row.innerHTML = `
+    <td class="val-muted mono">${i + 1}</td>
+    <td><div class="product-cell">
+      ${imgHtml}
+      <div class="product-text">
+        <span class="product-name" title="${(d.title||'').replace(/"/g,'&quot;')}">${d.title || '<span style="color:var(--muted)">Title unavailable</span>'}</span>
+        <div class="product-asin">
+          <span>${d.asin}</span>
+          <a href="https://www.amazon.co.uk/dp/${d.asin}" target="_blank" rel="noopener" class="amz-link">Amazon ↗</a>
+        </div>
+      </div>
+    </div></td>
+    <td class="right">${d.buy_box_price != null ? `<span class="val-orange">£${d.buy_box_price.toFixed(2)}</span>` : '<span class="val-muted">—</span>'}</td>
+    <td class="right mono">${d.offer_count_new != null ? d.offer_count_new : '<span class="val-muted">—</span>'}</td>
+    <td class="right mono">${d.bsr != null ? '#' + parseInt(d.bsr).toLocaleString('en-GB') : '<span class="val-muted">—</span>'}</td>
+    <td style="font-size:12px;color:var(--label);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${d.category||''}">${d.category || '<span style="color:var(--muted)">—</span>'}</td>
+    <td class="right mono">${d.fba_fee != null ? `<span class="val-red">-£${d.fba_fee.toFixed(2)}</span>` : '<span class="val-muted">—</span>'}</td>
+    <td class="right mono">${d.referral_fee != null ? `<span class="val-red">-£${d.referral_fee.toFixed(2)}</span>` : '<span class="val-muted">—</span>'}</td>
+    <td class="right mono">${buildNetRevCell(d)}</td>
+    <td class="right mono profit-col" id="profit-cell-${i}" style="display:${getCostPrice() != null ? 'table-cell' : 'none'}">${profitHtml}</td>`;
+}
 
-  // Fee breakdown
-  const bb        = d.buy_box_price || 0;
-  const fbaFee    = d.fba_fee || 0;
-  const refFee    = d.referral_fee || 0;
-  const otherFees = Math.max(0, fbaFee - refFee);
-  const netRev    = bb - fbaFee;
+function buildImageHtml(d) {
+  // Try API image first; fallback to Amazon CDN pattern
+  const src = d.image_url || `https://images-na.ssl-images-amazon.com/images/P/${d.asin}.01.LZZZZZZZ.jpg`;
+  return `<img src="${src}" class="product-thumb" alt=""
+    onerror="this.style.display='none';this.nextSibling && (this.nextSibling.style.display='grid')"
+  /><div class="product-thumb-placeholder" style="display:none">📦</div>`;
+}
 
-  $('fb-buybox').textContent   = fmtGBP(bb);
-  $('fb-fba').textContent      = fbaFee    ? `-${fmtGBP(fbaFee)}`    : '—';
-  $('fb-referral').textContent = refFee    ? `-${fmtGBP(refFee)}`    : '—';
-  $('fb-other').textContent    = otherFees > 0.005 ? `-${fmtGBP(otherFees)}` : '£0.00';
-  $('fb-net').textContent      = fmtGBP(netRev);
-  $('fb-net').className        = 'fee-amount ' + (netRev >= 0 ? 'green' : 'red');
+function buildNetRevCell(d) {
+  if (d.buy_box_price == null) return '<span class="val-muted">—</span>';
+  const net = d.buy_box_price - (d.fba_fee || 0);
+  const cls = net >= 0 ? 'val-green' : 'val-red';
+  return `<span class="${cls}">£${net.toFixed(2)}</span>`;
+}
 
-  // Profit calculator — reset
+function buildProfitCell(d, cost) {
+  if (cost == null || d.buy_box_price == null) return '<span class="val-muted">—</span>';
+  const profit = d.buy_box_price - (d.fba_fee || 0) - cost;
+  const pct    = d.buy_box_price > 0 ? ((profit / d.buy_box_price) * 100).toFixed(1) : 0;
+  const cls    = profit >= 0 ? 'val-green' : 'val-red';
+  return `<span class="${cls}">£${profit.toFixed(2)}</span><br><span style="font-size:10px;color:var(--muted)">${pct}%</span>`;
+}
+
+// ── Cost price & profit column ─────────────────────────────────────────────
+function getCostPrice() {
+  const v = parseFloat($('cost-input').value);
+  return isNaN(v) || v < 0 ? null : v;
+}
+
+function recalcAllProfits() {
+  const cost     = getCostPrice();
+  const hasCost  = cost != null;
+  const header   = $('profit-header');
+  if (header) header.style.display = hasCost ? 'table-cell' : 'none';
+
+  results.forEach((d, i) => {
+    const cell = document.getElementById(`profit-cell-${i}`);
+    if (!cell) return;
+    cell.style.display = hasCost ? 'table-cell' : 'none';
+    if (d.status === 'ok') {
+      cell.innerHTML = buildProfitCell(d, cost);
+    }
+  });
+
+  // Also show/hide all profit-col cells in skeleton/error rows
+  document.querySelectorAll('.profit-col').forEach(el => {
+    el.style.display = hasCost ? 'table-cell' : 'none';
+  });
+}
+
+// ── Clear ──────────────────────────────────────────────────────────────────
+function clearAll() {
+  results = [];
+  $('results-tbody').innerHTML = '';
+  $('table-wrap').style.display = 'none';
+  $('results-header').style.display = 'none';
+  $('progress-section').classList.remove('show');
+  $('clear-btn').style.display = 'none';
+  $('export-btn').style.display = 'none';
+  $('asin-textarea').value = '';
   $('cost-input').value = '';
-  $('profit-result').classList.remove('show');
-  $('calc-hint').style.display = bb ? 'block' : 'none';
-  if (!bb) $('calc-hint').textContent = 'No Buy Box price available — profit calculation unavailable.';
-
-  $('results').classList.add('show');
-
-  // Scroll results into view smoothly
-  $('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// ── Profit calculator ──────────────────────────────────────────────────────
-function calcProfit() {
-  if (!currentData) return;
-  const cost = parseFloat($('cost-input').value);
-  if (isNaN(cost) || cost < 0) { $('profit-result').classList.remove('show'); return; }
+// ── Export CSV ─────────────────────────────────────────────────────────────
+function exportCSV() {
+  const hasCost = getCostPrice() != null;
+  const headers = ['#', 'ASIN', 'Title', 'Buy Box (£)', 'New Offers', 'BSR', 'Category',
+                   'FBA Fee (£)', 'Referral Fee (£)', 'Net Revenue (£)'];
+  if (hasCost) headers.push('Cost (£)', 'Profit (£)', 'Margin (%)');
 
-  const bb      = currentData.buy_box_price || 0;
-  const fees    = currentData.fba_fee || 0;
-  const profit  = bb - fees - cost;
-  const margin  = bb > 0 ? (profit / bb) * 100 : 0;
+  const rows = results.map((d, i) => {
+    if (d.status !== 'ok') return [i+1, d.asin, 'ERROR', '', '', '', '', '', '', ''];
+    const cost  = getCostPrice();
+    const net   = d.buy_box_price != null ? (d.buy_box_price - (d.fba_fee || 0)).toFixed(2) : '';
+    const row   = [
+      i+1, d.asin,
+      `"${(d.title||'').replace(/"/g,'""')}"`,
+      d.buy_box_price != null ? d.buy_box_price.toFixed(2) : '',
+      d.offer_count_new ?? '',
+      d.bsr ?? '',
+      `"${(d.category||'').replace(/"/g,'""')}"`,
+      d.fba_fee != null ? d.fba_fee.toFixed(2) : '',
+      d.referral_fee != null ? d.referral_fee.toFixed(2) : '',
+      net,
+    ];
+    if (hasCost && cost != null && d.buy_box_price != null) {
+      const profit = d.buy_box_price - (d.fba_fee || 0) - cost;
+      const margin = d.buy_box_price > 0 ? ((profit / d.buy_box_price) * 100).toFixed(1) : '';
+      row.push(cost.toFixed(2), profit.toFixed(2), margin);
+    } else if (hasCost) {
+      row.push('', '', '');
+    }
+    return row;
+  });
 
-  $('calc-sellprice').textContent = fmtGBP(bb);
-  $('calc-fees').textContent      = `-${fmtGBP(fees)}`;
-  $('calc-cost').textContent      = `-${fmtGBP(cost)}`;
-  $('calc-profit').textContent    = fmtGBP(profit);
-  $('calc-profit').className      = 'fee-amount ' + (profit >= 0 ? 'green' : 'red');
-
-  $('profit-value').textContent   = fmtGBP(profit);
-  $('profit-value').className     = 'profit-big ' + (profit >= 0 ? 'positive' : 'negative');
-  $('profit-pct').textContent     = `${margin.toFixed(1)}% margin`;
-
-  $('profit-result').classList.add('show');
-  $('calc-hint').style.display = 'none';
+  const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `asin-analysis-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('CSV exported', 'success');
 }
 
 // ── Keyboard ───────────────────────────────────────────────────────────────
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
-    $('results').classList.remove('show');
-    $('error-state').classList.remove('show');
-    currentData = null;
-  }
+$('asin-textarea').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); runBulkAnalysis(); }
 });
-
-// ── Bootstrap ──────────────────────────────────────────────────────────────
-renderHistory();
-
-// Focus input on load
-setTimeout(() => $('asin-input').focus(), 100);
 </script>
 </body>
 </html>

@@ -123,7 +123,7 @@ def analyze_asin(asin: str, credentials: dict) -> dict:
         cat_resp = cat_api.get_catalog_item(
             asin=asin,
             marketplaceIds=[config.MARKETPLACE_ID],
-            includedData=["summaries", "salesRanks"],
+            includedData=["summaries", "salesRanks", "images"],
         )
         payload = cat_resp.payload
 
@@ -131,8 +131,19 @@ def analyze_asin(asin: str, credentials: dict) -> dict:
             if summary.get("marketplaceId") == config.MARKETPLACE_ID:
                 result["title"] = summary.get("itemName")
                 img = summary.get("mainImage", {})
-                result["image_url"] = img.get("link")
+                if img.get("link"):
+                    result["image_url"] = img["link"]
                 break
+
+        # Try images data if mainImage wasn't in summaries
+        if not result["image_url"]:
+            for img_block in payload.get("images", []):
+                if img_block.get("marketplaceId") == config.MARKETPLACE_ID:
+                    for img in img_block.get("images", []):
+                        if img.get("variant") in ("MAIN", "PT01") and img.get("link"):
+                            result["image_url"] = img["link"]
+                            break
+                    break
 
         for sr in payload.get("salesRanks", []):
             if sr.get("marketplaceId") == config.MARKETPLACE_ID:
