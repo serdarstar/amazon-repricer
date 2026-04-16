@@ -248,6 +248,35 @@ async def admin_panel(request: Request) -> HTMLResponse:
         return HTMLResponse(content=fh.read())
 
 
+@app.get("/analysis", response_class=HTMLResponse)
+async def analysis_page() -> HTMLResponse:
+    with open("templates/analysis.html", encoding="utf-8") as fh:
+        return HTMLResponse(content=fh.read())
+
+
+@app.get("/api/analysis/{asin}")
+def get_analysis(asin: str, request: Request) -> dict:
+    """Fetch full ASIN analysis: title, image, BSR, buy box, offer count, FBA fees."""
+    from amazon_api import analyze_asin, _build_credentials
+    asin = asin.strip().upper()
+    if len(asin) != 10:
+        raise HTTPException(status_code=400, detail="ASIN must be exactly 10 characters")
+
+    seller_id = _get_current_seller(request)["id"]
+    conn = get_db()
+    creds_row = conn.execute(
+        "SELECT * FROM seller_credentials WHERE seller_id = ?", (seller_id,)
+    ).fetchone()
+    conn.close()
+
+    if not creds_row:
+        raise HTTPException(status_code=400, detail="No SP-API credentials configured. Ask your admin.")
+
+    credentials = _build_credentials(dict(creds_row))
+    result = analyze_asin(asin, credentials)
+    return result
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 # Session info
 # ══════════════════════════════════════════════════════════════════════════════

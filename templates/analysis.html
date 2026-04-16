@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RepricerUK — ASIN Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0b0e14;
+    --surface:   #111520;
+    --card:      #161c2a;
+    --border:    #1f2a3f;
+    --border2:   #2a3a55;
+    --orange:    #FF9900;
+    --orange-dk: #cc7a00;
+    --orange-lt: #ffb833;
+    --green:     #22c55e;
+    --red:       #ef4444;
+    --blue:      #3b82f6;
+    --text:      #d4dce8;
+    --muted:     #5a6a82;
+    --label:     #8fa3be;
+    --font-head: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --sidebar-w: 220px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: var(--font-body); font-size: 14px;
+    min-height: 100vh; overflow-x: hidden;
+  }
+
+  /* ── App layout ── */
+  .app-layout { display: flex; min-height: 100vh; }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    position: fixed; top: 0; bottom: 0; left: 0; z-index: 100;
+  }
+  .sidebar-logo {
+    display: flex; align-items: center; gap: 10px;
+    padding: 18px 16px; border-bottom: 1px solid var(--border);
+    font-family: var(--font-head); font-size: 18px; font-weight: 800;
+    letter-spacing: -0.5px; color: #fff;
+  }
+  .logo-icon {
+    width: 30px; height: 30px; background: var(--orange);
+    border-radius: 7px; display: grid; place-items: center;
+    font-size: 15px; flex-shrink: 0;
+  }
+  .sidebar-logo span { color: var(--orange); }
+  .sidebar-nav {
+    flex: 1; padding: 10px 8px;
+    display: flex; flex-direction: column; gap: 2px; overflow-y: auto;
+  }
+  .nav-section-label {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .1em; color: var(--muted); padding: 12px 12px 6px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: 8px;
+    color: var(--muted); text-decoration: none;
+    font-size: 13px; font-weight: 500; transition: all .15s;
+    cursor: pointer; border: none; background: none; width: 100%; text-align: left;
+  }
+  .nav-item .nav-icon { font-size: 15px; width: 18px; text-align: center; }
+  .nav-item:hover { color: var(--text); background: var(--card); }
+  .nav-item.active { color: #fff; background: rgba(255,153,0,.12); border: 1px solid rgba(255,153,0,.15); }
+  .nav-item.active .nav-icon { color: var(--orange); }
+  .sidebar-bottom {
+    padding: 8px 8px 16px; border-top: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .user-badge {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 12px; margin-bottom: 4px;
+  }
+  .user-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: rgba(255,153,0,.2); border: 1px solid rgba(255,153,0,.3);
+    display: grid; place-items: center;
+    font-size: 12px; font-weight: 700; color: var(--orange); flex-shrink: 0;
+  }
+  .user-name { font-size: 12px; font-weight: 600; color: var(--text); }
+  .user-role { font-size: 11px; color: var(--muted); }
+
+  /* ── Main area ── */
+  .main-area {
+    margin-left: var(--sidebar-w); flex: 1;
+    display: flex; flex-direction: column; min-height: 100vh;
+  }
+
+  /* ── Top bar ── */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 28px; height: 58px;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 50;
+  }
+  .page-title { font-family: var(--font-head); font-size: 16px; font-weight: 700; color: #fff; }
+  .page-sub   { font-size: 12px; color: var(--muted); margin-left: 10px; }
+
+  /* ── Buttons ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 8px; border: none;
+    font-family: var(--font-body); font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all .15s;
+  }
+  .btn-primary { background: var(--orange); color: #000; }
+  .btn-primary:hover { background: var(--orange-lt); }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-ghost { background: transparent; color: var(--label); border: 1px solid var(--border2); }
+  .btn-ghost:hover { border-color: var(--orange); color: var(--orange); }
+
+  /* ── Content ── */
+  .container { max-width: 1100px; margin: 0 auto; padding: 32px 28px; }
+
+  /* ── Search box ── */
+  .search-hero {
+    text-align: center; margin-bottom: 36px;
+  }
+  .search-hero-title {
+    font-family: var(--font-head); font-size: 26px; font-weight: 800;
+    color: #fff; margin-bottom: 6px;
+  }
+  .search-hero-title span { color: var(--orange); }
+  .search-hero-sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+
+  .search-bar {
+    display: flex; gap: 10px; max-width: 520px; margin: 0 auto;
+  }
+  .asin-input {
+    flex: 1; background: var(--card); border: 1px solid var(--border2);
+    color: var(--text); border-radius: 10px;
+    padding: 12px 16px; font-size: 15px;
+    font-family: var(--font-mono); outline: none; transition: border-color .15s;
+    letter-spacing: .08em;
+  }
+  .asin-input::placeholder { color: var(--muted); font-family: var(--font-body); font-size: 14px; letter-spacing: 0; }
+  .asin-input:focus { border-color: var(--orange); }
+
+  /* ── Loading spinner ── */
+  .spinner {
+    display: none; margin: 60px auto; text-align: center;
+  }
+  .spinner.show { display: block; }
+  .spin-ring {
+    display: inline-block; width: 40px; height: 40px;
+    border: 3px solid var(--border); border-top-color: var(--orange);
+    border-radius: 50%; animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner p { margin-top: 12px; color: var(--muted); font-size: 13px; }
+
+  /* ── Error state ── */
+  .error-state { display: none; text-align: center; padding: 48px 20px; }
+  .error-state.show { display: block; }
+  .error-icon { font-size: 36px; margin-bottom: 12px; }
+  .error-msg { color: var(--red); font-size: 14px; font-weight: 500; }
+  .error-hint { color: var(--muted); font-size: 12px; margin-top: 6px; }
+
+  /* ── Results ── */
+  .results { display: none; }
+  .results.show { display: block; }
+
+  /* Product hero card */
+  .product-hero {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 24px;
+    display: flex; gap: 24px; margin-bottom: 20px;
+    align-items: flex-start;
+  }
+  .product-img {
+    width: 120px; height: 120px; object-fit: contain;
+    border-radius: 8px; background: #fff; padding: 8px;
+    flex-shrink: 0;
+  }
+  .product-img-placeholder {
+    width: 120px; height: 120px; border-radius: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    display: grid; place-items: center; font-size: 36px; flex-shrink: 0;
+  }
+  .product-info { flex: 1; min-width: 0; }
+  .product-title {
+    font-family: var(--font-head); font-size: 18px; font-weight: 700;
+    color: #fff; margin-bottom: 8px; line-height: 1.4;
+  }
+  .product-meta {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;
+  }
+  .meta-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 20px;
+    font-size: 12px; font-weight: 500;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--label);
+  }
+  .meta-chip .chip-icon { font-size: 11px; }
+  .asin-display {
+    font-family: var(--font-mono); font-size: 13px; color: var(--muted);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .asin-link {
+    color: var(--orange-lt); text-decoration: none; font-size: 12px;
+    border: 1px solid rgba(255,153,0,.2); padding: 2px 8px; border-radius: 4px;
+    transition: all .15s;
+  }
+  .asin-link:hover { background: rgba(255,153,0,.1); }
+
+  /* Stats row */
+  .stats-row {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 12px; margin-bottom: 20px;
+  }
+  .stat-box {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px 20px;
+    transition: border-color .2s;
+  }
+  .stat-box:hover { border-color: var(--border2); }
+  .stat-box-label {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .07em; color: var(--muted); margin-bottom: 10px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .stat-box-value {
+    font-family: var(--font-head); font-size: 26px; font-weight: 700; color: #fff;
+  }
+  .stat-box-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .stat-box.buybox .stat-box-value { color: var(--orange); }
+  .stat-box.green  .stat-box-value { color: var(--green); }
+  .stat-box.red    .stat-box-value { color: var(--red); }
+  .stat-box.blue   .stat-box-value { color: var(--blue); }
+
+  /* Bottom row */
+  .bottom-row {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  /* Fee breakdown */
+  .section-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px 22px;
+  }
+  .section-title {
+    font-family: var(--font-head); font-size: 14px; font-weight: 700;
+    color: #fff; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+  }
+  .fee-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 9px 0; border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .fee-row:last-child { border-bottom: none; }
+  .fee-name { color: var(--label); }
+  .fee-amount { font-family: var(--font-mono); font-weight: 600; color: var(--text); }
+  .fee-amount.red    { color: var(--red); }
+  .fee-amount.green  { color: var(--green); }
+  .fee-amount.orange { color: var(--orange); }
+  .fee-row.total {
+    margin-top: 4px; padding-top: 12px; border-top: 1px solid var(--border2);
+    border-bottom: none;
+  }
+  .fee-row.total .fee-name { color: var(--text); font-weight: 600; }
+  .fee-row.total .fee-amount { font-size: 15px; }
+
+  /* Profit calculator */
+  .calc-input-group {
+    display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px;
+  }
+  .calc-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--label); }
+  .calc-input {
+    background: var(--surface); border: 1px solid var(--border2);
+    color: var(--text); border-radius: 8px; padding: 10px 14px;
+    font-size: 16px; font-family: var(--font-mono); font-weight: 600;
+    outline: none; transition: border-color .15s; width: 100%;
+  }
+  .calc-input:focus { border-color: var(--orange); }
+
+  .profit-result {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 18px;
+    display: none;
+  }
+  .profit-result.show { display: block; }
+  .profit-big {
+    font-family: var(--font-head); font-size: 32px; font-weight: 800;
+    text-align: center; margin-bottom: 4px;
+  }
+  .profit-big.positive { color: var(--green); }
+  .profit-big.negative { color: var(--red); }
+  .profit-pct { text-align: center; font-size: 13px; color: var(--muted); margin-bottom: 14px; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  /* Toast */
+  #toast-container {
+    position: fixed; bottom: 24px; right: 24px;
+    display: flex; flex-direction: column; gap: 8px; z-index: 999;
+  }
+  .toast {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px; border-radius: 10px;
+    background: var(--card); border: 1px solid var(--border2);
+    color: var(--text); font-size: 13px; font-weight: 500;
+    box-shadow: 0 8px 24px rgba(0,0,0,.5);
+    animation: toastIn .2s ease; min-width: 260px;
+  }
+  .toast-success { border-left: 3px solid var(--green); }
+  .toast-error   { border-left: 3px solid var(--red); }
+  .toast-info    { border-left: 3px solid var(--orange); }
+  @keyframes toastIn { from { transform: translateX(30px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+  /* Recent history */
+  .history-bar {
+    display: flex; align-items: center; gap: 8px;
+    max-width: 520px; margin: 12px auto 0; flex-wrap: wrap;
+    justify-content: center;
+  }
+  .history-chip {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 6px; padding: 4px 10px;
+    font-family: var(--font-mono); font-size: 12px; color: var(--muted);
+    cursor: pointer; transition: all .15s;
+  }
+  .history-chip:hover { border-color: var(--orange); color: var(--orange); }
+  .history-label { font-size: 11px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<div class="app-layout">
+
+<!-- ── Sidebar ── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">↕</div>
+    Repricer<span>UK</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <span class="nav-section-label">Main</span>
+    <a href="/" class="nav-item">
+      <span class="nav-icon">📊</span> Dashboard
+    </a>
+    <a href="/analysis" class="nav-item active">
+      <span class="nav-icon">🔍</span> Analysis
+    </a>
+
+    <span class="nav-section-label" style="margin-top:8px">Manage</span>
+    <a href="/admin" class="nav-item" id="admin-link" style="display:none">
+      <span class="nav-icon">⚙</span> Admin Panel
+    </a>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="user-badge">
+      <div class="user-avatar" id="user-avatar">?</div>
+      <div>
+        <div class="user-name" id="user-name">—</div>
+        <div class="user-role" id="user-role">Seller</div>
+      </div>
+    </div>
+    <a href="/logout" class="nav-item">
+      <span class="nav-icon">↩</span> Sign out
+    </a>
+  </div>
+</aside>
+
+<!-- ── Main area ── -->
+<div class="main-area">
+
+<!-- Top bar -->
+<div class="topbar">
+  <div style="display:flex;align-items:center;">
+    <div class="page-title">ASIN Analysis</div>
+    <span class="page-sub">Powered by Amazon SP-API</span>
+  </div>
+</div>
+
+<!-- Content -->
+<div class="container">
+
+  <!-- Search hero -->
+  <div class="search-hero">
+    <div class="search-hero-title">Analyse any <span>ASIN</span></div>
+    <div class="search-hero-sub">Get real-time Buy Box price, FBA fees, BSR, offer count and profit calculator</div>
+
+    <div class="search-bar">
+      <input
+        type="text" id="asin-input" class="asin-input"
+        placeholder="Enter ASIN  e.g. B084NZLX89"
+        maxlength="10"
+        onkeydown="if(event.key==='Enter')runAnalysis()"
+      />
+      <button class="btn btn-primary" onclick="runAnalysis()" id="analyse-btn">
+        🔍 Analyse
+      </button>
+    </div>
+
+    <div class="history-bar" id="history-bar" style="display:none">
+      <span class="history-label">Recent:</span>
+      <span id="history-chips"></span>
+    </div>
+  </div>
+
+  <!-- Spinner -->
+  <div class="spinner" id="spinner">
+    <div class="spin-ring"></div>
+    <p>Fetching data from Amazon SP-API…<br><span style="font-size:11px">This may take 5–10 seconds</span></p>
+  </div>
+
+  <!-- Error -->
+  <div class="error-state" id="error-state">
+    <div class="error-icon">⚠️</div>
+    <div class="error-msg" id="error-msg">Something went wrong</div>
+    <div class="error-hint" id="error-hint"></div>
+  </div>
+
+  <!-- Results -->
+  <div class="results" id="results">
+
+    <!-- Product hero -->
+    <div class="product-hero" id="product-hero">
+      <div class="product-img-placeholder" id="product-img-wrap">📦</div>
+      <div class="product-info">
+        <div class="product-title" id="product-title">—</div>
+        <div class="product-meta" id="product-meta"></div>
+        <div class="asin-display">
+          <span id="product-asin-text" style="font-size:13px"></span>
+          <a id="amazon-link" href="#" target="_blank" rel="noopener" class="asin-link">View on Amazon ↗</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats row -->
+    <div class="stats-row">
+      <div class="stat-box buybox">
+        <div class="stat-box-label"><span>💰</span> Buy Box Price</div>
+        <div class="stat-box-value" id="res-buybox">—</div>
+        <div class="stat-box-sub" id="res-buybox-sub"></div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-label"><span>👥</span> New Offers</div>
+        <div class="stat-box-value" id="res-offers">—</div>
+        <div class="stat-box-sub">competing sellers</div>
+      </div>
+      <div class="stat-box blue">
+        <div class="stat-box-label"><span>📈</span> Best Seller Rank</div>
+        <div class="stat-box-value" id="res-bsr">—</div>
+        <div class="stat-box-sub" id="res-category">in category</div>
+      </div>
+      <div class="stat-box red">
+        <div class="stat-box-label"><span>🏭</span> Total Fees (FBA)</div>
+        <div class="stat-box-value" id="res-fees">—</div>
+        <div class="stat-box-sub">at buy box price</div>
+      </div>
+    </div>
+
+    <!-- Bottom row: fee breakdown + profit calculator -->
+    <div class="bottom-row">
+
+      <!-- Fee breakdown -->
+      <div class="section-card">
+        <div class="section-title">🏭 Fee Breakdown</div>
+        <div class="fee-row">
+          <span class="fee-name">Buy Box Price</span>
+          <span class="fee-amount orange" id="fb-buybox">—</span>
+        </div>
+        <div class="fee-row">
+          <span class="fee-name">FBA Fulfilment Fee</span>
+          <span class="fee-amount red" id="fb-fba">—</span>
+        </div>
+        <div class="fee-row">
+          <span class="fee-name">Referral Fee</span>
+          <span class="fee-amount red" id="fb-referral">—</span>
+        </div>
+        <div class="fee-row">
+          <span class="fee-name">Other Fees</span>
+          <span class="fee-amount red" id="fb-other">—</span>
+        </div>
+        <div class="fee-row total">
+          <span class="fee-name">Revenue After Fees</span>
+          <span class="fee-amount green" id="fb-net">—</span>
+        </div>
+        <p style="font-size:11px;color:var(--muted);margin-top:12px;line-height:1.6">
+          * FBA fees are estimated at the Buy Box price. Actual fees may vary by product size/weight.
+        </p>
+      </div>
+
+      <!-- Profit calculator -->
+      <div class="section-card">
+        <div class="section-title">🧮 Profit Calculator</div>
+        <div class="calc-input-group">
+          <label class="calc-label">Your Cost Price (£)</label>
+          <input type="number" id="cost-input" class="calc-input"
+                 placeholder="0.00" step="0.01" min="0"
+                 oninput="calcProfit()" />
+        </div>
+        <div class="profit-result" id="profit-result">
+          <div class="profit-big" id="profit-value">£0.00</div>
+          <div class="profit-pct" id="profit-pct">0% margin</div>
+          <div>
+            <div class="fee-row">
+              <span class="fee-name">Sell Price (Buy Box)</span>
+              <span class="fee-amount orange" id="calc-sellprice">—</span>
+            </div>
+            <div class="fee-row">
+              <span class="fee-name">Total Amazon Fees</span>
+              <span class="fee-amount red" id="calc-fees">—</span>
+            </div>
+            <div class="fee-row">
+              <span class="fee-name">Your Cost</span>
+              <span class="fee-amount red" id="calc-cost">—</span>
+            </div>
+            <div class="fee-row total">
+              <span class="fee-name">Net Profit</span>
+              <span class="fee-amount" id="calc-profit">—</span>
+            </div>
+          </div>
+        </div>
+        <p id="calc-hint" style="font-size:12px;color:var(--muted);margin-top:12px;line-height:1.6">
+          Enter your cost price above to calculate your profit at the current Buy Box price.
+        </p>
+      </div>
+
+    </div><!-- /bottom-row -->
+  </div><!-- /results -->
+
+</div><!-- /container -->
+</div><!-- /main-area -->
+</div><!-- /app-layout -->
+
+<div id="toast-container"></div>
+
+<script>
+'use strict';
+
+const $ = id => document.getElementById(id);
+
+let currentData = null;
+let searchHistory = JSON.parse(localStorage.getItem('asin_history') || '[]');
+
+// ── Session ────────────────────────────────────────────────────────────────
+fetch('/api/me').then(r => r.json()).then(me => {
+  if (me.is_admin) {
+    const el = $('admin-link');
+    if (el) el.style.display = 'flex';
+  }
+  const initials = (me.username || '?')[0].toUpperCase();
+  $('user-avatar').textContent = initials;
+  $('user-name').textContent   = me.username || '—';
+  $('user-role').textContent   = me.is_admin ? 'Admin' : 'Seller';
+});
+
+// ── History ────────────────────────────────────────────────────────────────
+function renderHistory() {
+  if (!searchHistory.length) { $('history-bar').style.display = 'none'; return; }
+  $('history-bar').style.display = 'flex';
+  $('history-chips').innerHTML = searchHistory.slice(0,6).map(asin =>
+    `<span class="history-chip" onclick="loadFromHistory('${asin}')">${asin}</span>`
+  ).join('');
+}
+
+function loadFromHistory(asin) {
+  $('asin-input').value = asin;
+  runAnalysis();
+}
+
+function addToHistory(asin) {
+  searchHistory = [asin, ...searchHistory.filter(a => a !== asin)].slice(0, 10);
+  localStorage.setItem('asin_history', JSON.stringify(searchHistory));
+  renderHistory();
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+function toast(msg, type='info') {
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  const icons = { success:'✓', error:'✕', info:'ℹ' };
+  el.innerHTML = `<span>${icons[type]||'•'}</span><span>${msg}</span>`;
+  $('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+// ── Format helpers ─────────────────────────────────────────────────────────
+function fmtGBP(val) {
+  if (val === null || val === undefined) return '—';
+  return `£${parseFloat(val).toFixed(2)}`;
+}
+function fmtNum(val) {
+  if (val === null || val === undefined) return '—';
+  return parseInt(val).toLocaleString('en-GB');
+}
+
+// ── Main analysis ──────────────────────────────────────────────────────────
+async function runAnalysis() {
+  const asin = $('asin-input').value.trim().toUpperCase();
+  if (!asin) { toast('Enter an ASIN first', 'error'); return; }
+  if (asin.length !== 10) { toast('ASIN must be exactly 10 characters', 'error'); return; }
+
+  // Reset UI
+  $('spinner').classList.add('show');
+  $('results').classList.remove('show');
+  $('error-state').classList.remove('show');
+  const btn = $('analyse-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Loading…';
+
+  try {
+    const r = await fetch(`/api/analysis/${encodeURIComponent(asin)}`);
+    const d = await r.json();
+
+    if (!r.ok) {
+      showError(d.detail || `Error ${r.status}`, 'Check the ASIN is correct and your SP-API credentials are configured.');
+      return;
+    }
+
+    currentData = d;
+    addToHistory(asin);
+    renderResults(d);
+
+  } catch(e) {
+    showError('Could not reach server', e.message || '');
+  } finally {
+    $('spinner').classList.remove('show');
+    btn.disabled = false;
+    btn.textContent = '🔍 Analyse';
+  }
+}
+
+function showError(msg, hint='') {
+  $('spinner').classList.remove('show');
+  $('results').classList.remove('show');
+  $('error-state').classList.add('show');
+  $('error-msg').textContent  = msg;
+  $('error-hint').textContent = hint;
+}
+
+function renderResults(d) {
+  // Product hero
+  if (d.image_url) {
+    $('product-img-wrap').innerHTML =
+      `<img src="${d.image_url}" class="product-img" alt="Product image" onerror="this.parentNode.innerHTML='📦'" />`;
+  } else {
+    $('product-img-wrap').innerHTML = '📦';
+    $('product-img-wrap').className = 'product-img-placeholder';
+  }
+
+  $('product-title').textContent = d.title || 'Product title unavailable';
+  $('product-asin-text').textContent = d.asin;
+  $('amazon-link').href = `https://www.amazon.co.uk/dp/${d.asin}`;
+
+  // Meta chips
+  const chips = [];
+  if (d.category) chips.push(`<span class="meta-chip"><span class="chip-icon">🗂</span>${d.category}</span>`);
+  if (d.bsr)      chips.push(`<span class="meta-chip"><span class="chip-icon">📈</span>BSR #${fmtNum(d.bsr)}</span>`);
+  $('product-meta').innerHTML = chips.join('');
+
+  // Stats row
+  $('res-buybox').textContent = d.buy_box_price ? fmtGBP(d.buy_box_price) : '—';
+  $('res-buybox-sub').textContent = d.buy_box_price ? 'current buy box' : 'no buy box winner';
+  $('res-offers').textContent = d.offer_count_new !== null ? fmtNum(d.offer_count_new) : '—';
+  $('res-bsr').textContent    = d.bsr ? '#' + fmtNum(d.bsr) : '—';
+  $('res-category').textContent = d.category || 'in category';
+  $('res-fees').textContent   = d.fba_fee ? fmtGBP(d.fba_fee) : '—';
+
+  // Fee breakdown
+  const bb        = d.buy_box_price || 0;
+  const fbaFee    = d.fba_fee || 0;
+  const refFee    = d.referral_fee || 0;
+  const otherFees = Math.max(0, fbaFee - refFee);
+  const netRev    = bb - fbaFee;
+
+  $('fb-buybox').textContent   = fmtGBP(bb);
+  $('fb-fba').textContent      = fbaFee    ? `-${fmtGBP(fbaFee)}`    : '—';
+  $('fb-referral').textContent = refFee    ? `-${fmtGBP(refFee)}`    : '—';
+  $('fb-other').textContent    = otherFees > 0.005 ? `-${fmtGBP(otherFees)}` : '£0.00';
+  $('fb-net').textContent      = fmtGBP(netRev);
+  $('fb-net').className        = 'fee-amount ' + (netRev >= 0 ? 'green' : 'red');
+
+  // Profit calculator — reset
+  $('cost-input').value = '';
+  $('profit-result').classList.remove('show');
+  $('calc-hint').style.display = bb ? 'block' : 'none';
+  if (!bb) $('calc-hint').textContent = 'No Buy Box price available — profit calculation unavailable.';
+
+  $('results').classList.add('show');
+
+  // Scroll results into view smoothly
+  $('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── Profit calculator ──────────────────────────────────────────────────────
+function calcProfit() {
+  if (!currentData) return;
+  const cost = parseFloat($('cost-input').value);
+  if (isNaN(cost) || cost < 0) { $('profit-result').classList.remove('show'); return; }
+
+  const bb      = currentData.buy_box_price || 0;
+  const fees    = currentData.fba_fee || 0;
+  const profit  = bb - fees - cost;
+  const margin  = bb > 0 ? (profit / bb) * 100 : 0;
+
+  $('calc-sellprice').textContent = fmtGBP(bb);
+  $('calc-fees').textContent      = `-${fmtGBP(fees)}`;
+  $('calc-cost').textContent      = `-${fmtGBP(cost)}`;
+  $('calc-profit').textContent    = fmtGBP(profit);
+  $('calc-profit').className      = 'fee-amount ' + (profit >= 0 ? 'green' : 'red');
+
+  $('profit-value').textContent   = fmtGBP(profit);
+  $('profit-value').className     = 'profit-big ' + (profit >= 0 ? 'positive' : 'negative');
+  $('profit-pct').textContent     = `${margin.toFixed(1)}% margin`;
+
+  $('profit-result').classList.add('show');
+  $('calc-hint').style.display = 'none';
+}
+
+// ── Keyboard ───────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    $('results').classList.remove('show');
+    $('error-state').classList.remove('show');
+    currentData = null;
+  }
+});
+
+// ── Bootstrap ──────────────────────────────────────────────────────────────
+renderHistory();
+
+// Focus input on load
+setTimeout(() => $('asin-input').focus(), 100);
+</script>
+</body>
+</html>

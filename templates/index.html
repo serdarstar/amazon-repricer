@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RepricerUK — Amazon Buy Box Repricer</title>
+<title>RepricerUK — Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -24,6 +24,7 @@
     --font-head: 'Syne', sans-serif;
     --font-body: 'DM Sans', sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
+    --sidebar-w: 220px;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -37,30 +38,120 @@
     overflow-x: hidden;
   }
 
-  /* ── Header ──────────────────────────────────────────────────── */
-  header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 28px;
-    height: 58px;
+  /* ── App layout ──────────────────────────────────────────────── */
+  .app-layout { display: flex; min-height: 100vh; }
+
+  /* ── Sidebar ─────────────────────────────────────────────────── */
+  .sidebar {
+    width: var(--sidebar-w);
     background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    position: sticky; top: 0; z-index: 100;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; bottom: 0; left: 0;
+    z-index: 100;
   }
-  .logo {
+
+  .sidebar-logo {
     display: flex; align-items: center; gap: 10px;
+    padding: 18px 16px;
+    border-bottom: 1px solid var(--border);
     font-family: var(--font-head);
-    font-size: 20px; font-weight: 800;
+    font-size: 18px; font-weight: 800;
     letter-spacing: -0.5px; color: #fff;
   }
   .logo-icon {
     width: 30px; height: 30px; background: var(--orange);
     border-radius: 7px;
-    display: grid; place-items: center; font-size: 15px;
+    display: grid; place-items: center; font-size: 15px; flex-shrink: 0;
   }
-  .logo span { color: var(--orange); }
-  .header-right { display: flex; align-items: center; gap: 10px; }
+  .sidebar-logo span { color: var(--orange); }
+
+  .sidebar-nav {
+    flex: 1;
+    padding: 10px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow-y: auto;
+  }
+
+  .nav-section-label {
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .1em;
+    color: var(--muted);
+    padding: 12px 12px 6px;
+  }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px; font-weight: 500;
+    transition: all .15s;
+    cursor: pointer;
+    border: none; background: none; width: 100%; text-align: left;
+  }
+  .nav-item .nav-icon { font-size: 15px; width: 18px; text-align: center; }
+  .nav-item:hover { color: var(--text); background: var(--card); }
+  .nav-item.active {
+    color: #fff;
+    background: rgba(255,153,0,.12);
+    border: 1px solid rgba(255,153,0,.15);
+  }
+  .nav-item.active .nav-icon { color: var(--orange); }
+
+  .sidebar-bottom {
+    padding: 8px 8px 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .user-badge {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 12px;
+    margin-bottom: 4px;
+  }
+  .user-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: rgba(255,153,0,.2); border: 1px solid rgba(255,153,0,.3);
+    display: grid; place-items: center;
+    font-size: 12px; font-weight: 700; color: var(--orange);
+    flex-shrink: 0;
+  }
+  .user-name { font-size: 12px; font-weight: 600; color: var(--text); }
+  .user-role { font-size: 11px; color: var(--muted); }
+
+  /* ── Main area ───────────────────────────────────────────────── */
+  .main-area {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  /* ── Top bar ──────────────────────────────────────────────────── */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 28px; height: 58px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 50;
+  }
+  .topbar-left {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .page-title {
+    font-family: var(--font-head);
+    font-size: 16px; font-weight: 700; color: #fff;
+  }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
 
   .pill {
     display: flex; align-items: center; gap: 6px;
@@ -101,12 +192,9 @@
   .dot-orange { background: var(--orange); }
   .dot-red { background: var(--red); }
   .dot-grey { background: var(--muted); }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: .4; }
-  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
 
-  /* ── Main layout ─────────────────────────────────────────────── */
+  /* ── Content ─────────────────────────────────────────────────── */
   .container { max-width: 1400px; margin: 0 auto; padding: 24px 28px; }
 
   /* ── Stats grid ──────────────────────────────────────────────── */
@@ -117,31 +205,21 @@
     margin-bottom: 24px;
   }
   .stat-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px 18px;
-    transition: border-color .2s;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 18px; transition: border-color .2s;
   }
   .stat-card:hover { border-color: var(--border2); }
-  .stat-label {
-    font-size: 11px; font-weight: 500; text-transform: uppercase;
-    letter-spacing: .08em; color: var(--muted); margin-bottom: 8px;
-  }
-  .stat-value {
-    font-family: var(--font-head);
-    font-size: 28px; font-weight: 700; color: #fff;
-  }
+  .stat-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 8px; }
+  .stat-value { font-family: var(--font-head); font-size: 28px; font-weight: 700; color: #fff; }
   .stat-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
   .stat-orange .stat-value { color: var(--orange); }
   .stat-green  .stat-value { color: var(--green); }
 
-  /* ── API Status bar ────────────────────────────────────────── */
+  /* ── API Status bar ───────────────────────────────────────────── */
   .api-status-bar {
     display: flex; align-items: center; justify-content: space-between;
     background: var(--card); border: 1px solid var(--border);
-    border-radius: 10px; padding: 12px 18px;
-    margin-bottom: 20px;
+    border-radius: 10px; padding: 12px 18px; margin-bottom: 20px;
   }
   .api-status-bar.ok   { border-left: 3px solid var(--green); }
   .api-status-bar.fail { border-left: 3px solid var(--red); }
@@ -154,52 +232,37 @@
   .tabs { display: flex; gap: 4px; }
   .tab {
     padding: 7px 16px; border-radius: 6px; cursor: pointer;
-    font-size: 13px; font-weight: 500; color: var(--muted);
-    transition: all .15s;
+    font-size: 13px; font-weight: 500; color: var(--muted); transition: all .15s;
   }
   .tab.active { background: var(--card); color: #fff; border: 1px solid var(--border); }
   .tab:not(.active):hover { color: var(--text); }
 
-  .search-wrap {
-    display: flex; align-items: center; gap: 8px;
-  }
+  .search-wrap { display: flex; align-items: center; gap: 8px; }
   .search-input {
     background: var(--card); border: 1px solid var(--border);
     color: var(--text); border-radius: 7px;
     padding: 7px 12px; font-size: 13px; font-family: var(--font-body);
-    width: 220px; outline: none;
-    transition: border-color .15s;
+    width: 220px; outline: none; transition: border-color .15s;
   }
   .search-input::placeholder { color: var(--muted); }
   .search-input:focus { border-color: var(--orange); }
 
   /* ── Table ───────────────────────────────────────────────────── */
-  .table-wrap {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 10px; overflow: hidden;
-  }
+  .table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
   .panel { display: none; }
   .panel.active { display: block; }
 
   table { width: 100%; border-collapse: collapse; }
   thead th {
-    padding: 10px 14px;
-    background: var(--surface);
-    font-size: 11px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: .07em; color: var(--muted);
-    border-bottom: 1px solid var(--border);
-    text-align: left; white-space: nowrap;
+    padding: 10px 14px; background: var(--surface);
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .07em; color: var(--muted);
+    border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap;
   }
-  tbody tr {
-    border-bottom: 1px solid var(--border);
-    transition: background .1s;
-  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
   tbody tr:last-child { border-bottom: none; }
   tbody tr:hover { background: rgba(255,153,0,.04); }
-  td {
-    padding: 11px 14px; font-size: 13px; color: var(--text);
-    vertical-align: middle;
-  }
+  td { padding: 11px 14px; font-size: 13px; color: var(--text); vertical-align: middle; }
   .mono { font-family: var(--font-mono); font-size: 13px; }
   .price-current { color: #fff; font-weight: 600; }
   .price-bb { color: var(--orange); }
@@ -209,8 +272,7 @@
   .badge {
     display: inline-flex; align-items: center; gap: 4px;
     padding: 3px 9px; border-radius: 20px;
-    font-size: 11px; font-weight: 600; text-transform: uppercase;
-    letter-spacing: .05em;
+    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em;
   }
   .badge-repriced { background: rgba(34,197,94,.12); color: var(--green); border: 1px solid rgba(34,197,94,.25); }
   .badge-nochange { background: rgba(90,106,130,.12); color: var(--muted); border: 1px solid var(--border); }
@@ -219,8 +281,8 @@
   .badge-active   { background: rgba(34,197,94,.1); color: var(--green); border: 1px solid rgba(34,197,94,.2); }
   .badge-paused   { background: rgba(90,106,130,.1); color: var(--muted); border: 1px solid var(--border); }
 
-  .sku-cell { font-family: var(--font-mono); font-size: 12px; color: var(--orange-lt); }
-  .asin-cell { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+  .sku-cell   { font-family: var(--font-mono); font-size: 12px; color: var(--orange-lt); }
+  .asin-cell  { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
   .title-cell { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   .actions { display: flex; gap: 6px; }
@@ -233,7 +295,6 @@
   .icon-btn:hover { border-color: var(--orange); color: var(--orange); }
   .icon-btn.del:hover { border-color: var(--red); color: var(--red); }
 
-  /* toggle switch */
   .toggle { position: relative; display: inline-block; width: 34px; height: 18px; }
   .toggle input { opacity: 0; width: 0; height: 0; }
   .slider {
@@ -247,28 +308,22 @@
   input:checked + .slider { background: var(--green); }
   input:checked + .slider::before { transform: translateX(16px); }
 
-  .empty-state {
-    text-align: center; padding: 60px 20px; color: var(--muted);
-  }
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
   .empty-state .icon { font-size: 36px; margin-bottom: 12px; }
   .empty-state p { font-size: 14px; }
 
   /* ── Progress bar ─────────────────────────────────────────────── */
   .progress-bar-wrap {
     height: 3px; background: var(--border);
-    position: fixed; top: 58px; left: 0; right: 0; z-index: 99;
+    position: fixed; top: 58px; left: var(--sidebar-w); right: 0; z-index: 99;
     overflow: hidden; display: none;
   }
   .progress-bar-wrap.show { display: block; }
   .progress-bar {
     height: 3px; background: var(--orange);
-    animation: indeterminate 1.2s linear infinite;
-    width: 40%;
+    animation: indeterminate 1.2s linear infinite; width: 40%;
   }
-  @keyframes indeterminate {
-    0%   { transform: translateX(-100%); }
-    100% { transform: translateX(350%); }
-  }
+  @keyframes indeterminate { 0% { transform: translateX(-100%); } 100% { transform: translateX(350%); } }
 
   /* ── Modals ───────────────────────────────────────────────────── */
   .overlay {
@@ -286,38 +341,25 @@
     animation: slideUp .2s ease;
   }
   .modal-wide { width: 580px; }
-  @keyframes slideUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to   { transform: translateY(0);    opacity: 1; }
-  }
-  .modal-header {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 22px;
-  }
-  .modal-title {
-    font-family: var(--font-head); font-size: 18px; font-weight: 700; color: #fff;
-  }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+  .modal-title { font-family: var(--font-head); font-size: 18px; font-weight: 700; color: #fff; }
   .close-btn {
     width: 30px; height: 30px; border-radius: 7px;
     background: var(--border); border: none; color: var(--muted);
-    cursor: pointer; font-size: 16px; display: grid; place-items: center;
-    transition: all .15s;
+    cursor: pointer; font-size: 16px; display: grid; place-items: center; transition: all .15s;
   }
   .close-btn:hover { background: var(--border2); color: #fff; }
 
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
   .form-group:last-child { margin-bottom: 0; }
-  .form-label {
-    font-size: 12px; font-weight: 600; text-transform: uppercase;
-    letter-spacing: .07em; color: var(--label);
-  }
+  .form-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--label); }
   .form-input, .form-select {
     background: var(--surface); border: 1px solid var(--border2);
     color: var(--text); border-radius: 8px;
     padding: 9px 12px; font-size: 13px; font-family: var(--font-body);
-    outline: none; transition: border-color .15s;
-    width: 100%;
+    outline: none; transition: border-color .15s; width: 100%;
   }
   .form-input:focus, .form-select:focus { border-color: var(--orange); }
   .form-input.mono-input { font-family: var(--font-mono); }
@@ -343,28 +385,21 @@
   .toast-success { border-left: 3px solid var(--green); }
   .toast-error   { border-left: 3px solid var(--red); }
   .toast-info    { border-left: 3px solid var(--orange); }
-  @keyframes toastIn {
-    from { transform: translateX(30px); opacity: 0; }
-    to   { transform: translateX(0); opacity: 1; }
-  }
+  @keyframes toastIn { from { transform: translateX(30px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
   /* ── Settings section ─────────────────────────────────────────── */
   .settings-section { margin-bottom: 24px; }
   .settings-section-title {
     font-size: 11px; font-weight: 700; text-transform: uppercase;
     letter-spacing: .08em; color: var(--muted);
-    padding-bottom: 10px; margin-bottom: 14px;
-    border-bottom: 1px solid var(--border);
+    padding-bottom: 10px; margin-bottom: 14px; border-bottom: 1px solid var(--border);
   }
-  .setting-row {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 10px 0; border-bottom: 1px solid var(--border);
-  }
+  .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
   .setting-row:last-child { border-bottom: none; }
   .setting-name { font-size: 13px; font-weight: 500; color: var(--text); }
   .setting-desc { font-size: 11px; color: var(--muted); margin-top: 2px; }
 
-  /* ── Log table specifics ─────────────────────────────────────── */
+  /* ── Log table ───────────────────────────────────────────────── */
   .log-action { font-family: var(--font-mono); font-size: 11px; }
   .price-arrow { color: var(--muted); margin: 0 4px; }
   .reason-cell { max-width: 260px; color: var(--muted); font-size: 12px; }
@@ -375,37 +410,72 @@
   ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
 
-  /* ── Last run indicator ──────────────────────────────────────── */
-  .last-run-badge {
-    font-size: 11px; color: var(--muted); font-family: var(--font-mono);
-  }
+  .last-run-badge { font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
 </style>
 </head>
 <body>
 
-<!-- Progress bar -->
-<div class="progress-bar-wrap" id="progress"><div class="progress-bar"></div></div>
+<div class="app-layout">
 
-<!-- Header -->
-<header>
-  <div class="logo">
+<!-- ── Sidebar ───────────────────────────────────────────────────── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
     <div class="logo-icon">↕</div>
     Repricer<span>UK</span>
   </div>
-  <div class="header-right">
+
+  <nav class="sidebar-nav">
+    <span class="nav-section-label">Main</span>
+    <a href="/" class="nav-item active">
+      <span class="nav-icon">📊</span> Dashboard
+    </a>
+    <a href="/analysis" class="nav-item">
+      <span class="nav-icon">🔍</span> Analysis
+    </a>
+
+    <span class="nav-section-label" style="margin-top:8px">Manage</span>
+    <a href="/admin" class="nav-item" id="admin-link" style="display:none">
+      <span class="nav-icon">⚙</span> Admin Panel
+    </a>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <div class="user-badge" id="user-badge">
+      <div class="user-avatar" id="user-avatar">?</div>
+      <div>
+        <div class="user-name" id="user-name">—</div>
+        <div class="user-role" id="user-role">Seller</div>
+      </div>
+    </div>
+    <a href="/logout" class="nav-item">
+      <span class="nav-icon">↩</span> Sign out
+    </a>
+  </div>
+</aside>
+
+<!-- ── Main area ─────────────────────────────────────────────────── -->
+<div class="main-area">
+
+<!-- Progress bar -->
+<div class="progress-bar-wrap" id="progress"><div class="progress-bar"></div></div>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="page-title">Dashboard</div>
     <span id="status-indicator" class="pill pill-ghost">
       <span class="status-dot dot-green"></span>
       <span id="status-text">Live</span>
     </span>
     <span class="last-run-badge">Last run: <span id="last-run-time">—</span></span>
+  </div>
+  <div class="topbar-right">
     <button class="btn btn-ghost" onclick="openSettings()">⚙ Settings</button>
     <button class="btn btn-primary" onclick="manualRun()" id="run-btn">▶ Run Now</button>
-    <a href="/admin" class="btn btn-ghost" style="text-decoration:none" id="admin-link">⚙ Admin</a>
-    <a href="/logout" class="btn btn-ghost" style="text-decoration:none">Sign out</a>
   </div>
-</header>
+</div>
 
-<!-- Main -->
+<!-- Content -->
 <div class="container">
 
   <!-- Stats -->
@@ -467,23 +537,15 @@
     </div>
   </div>
 
-  <!-- Listings panel -->
+  <!-- Table -->
   <div class="table-wrap">
     <div class="panel active" id="panel-listings">
       <table id="listings-table">
         <thead>
           <tr>
-            <th>SKU</th>
-            <th>ASIN</th>
-            <th>Title</th>
-            <th>My Price</th>
-            <th>Buy Box</th>
-            <th>Floor</th>
-            <th>Ceiling</th>
-            <th>BB Diff</th>
-            <th>Status</th>
-            <th>Last Repriced</th>
-            <th style="width:90px">Actions</th>
+            <th>SKU</th><th>ASIN</th><th>Title</th><th>My Price</th>
+            <th>Buy Box</th><th>Floor</th><th>Ceiling</th><th>BB Diff</th>
+            <th>Status</th><th>Last Repriced</th><th style="width:90px">Actions</th>
           </tr>
         </thead>
         <tbody id="listings-body">
@@ -498,13 +560,8 @@
       <table id="logs-table">
         <thead>
           <tr>
-            <th>Time</th>
-            <th>SKU</th>
-            <th>Action</th>
-            <th>Old Price</th>
-            <th>New Price</th>
-            <th>Buy Box</th>
-            <th>Reason</th>
+            <th>Time</th><th>SKU</th><th>Action</th>
+            <th>Old Price</th><th>New Price</th><th>Buy Box</th><th>Reason</th>
           </tr>
         </thead>
         <tbody id="logs-body">
@@ -515,7 +572,10 @@
       </table>
     </div>
   </div>
-</div>
+
+</div><!-- /container -->
+</div><!-- /main-area -->
+</div><!-- /app-layout -->
 
 <!-- ══════════════ Add / Edit Listing Modal ══════════════ -->
 <div class="overlay" id="listing-overlay" onclick="if(event.target===this)closeListingModal()">
@@ -524,7 +584,6 @@
       <div class="modal-title" id="modal-title">Add Listing</div>
       <button class="close-btn" onclick="closeListingModal()">✕</button>
     </div>
-
     <div class="form-group">
       <label class="form-label">SKU</label>
       <input type="text" id="f-sku" class="form-input mono-input" placeholder="e.g. MY-SKU-001" />
@@ -537,7 +596,6 @@
       <label class="form-label">Product Title <span style="color:var(--muted);font-weight:400">(optional)</span></label>
       <input type="text" id="f-title" class="form-input" placeholder="e.g. Wireless Bluetooth Headphones" />
     </div>
-
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Current Price (£)</label>
@@ -545,7 +603,6 @@
       </div>
       <div></div>
     </div>
-
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Floor Price (£)</label>
@@ -558,7 +615,6 @@
         <span class="form-hint">Never go above this</span>
       </div>
     </div>
-
     <div class="form-group">
       <label class="form-label">Auto-Reprice</label>
       <label class="toggle">
@@ -566,7 +622,6 @@
         <span class="slider"></span>
       </label>
     </div>
-
     <div class="form-footer">
       <button class="btn btn-ghost" onclick="closeListingModal()">Cancel</button>
       <button class="btn btn-primary" id="save-btn" onclick="saveListing()">Save Listing</button>
@@ -581,12 +636,10 @@
       <div class="modal-title">Settings</div>
       <button class="close-btn" onclick="closeSettings()">✕</button>
     </div>
-
     <div class="settings-section">
       <div class="settings-section-title">Amazon SP-API Credentials</div>
       <p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">
-        Credentials are loaded from your <code style="background:var(--surface);padding:2px 6px;border-radius:4px;color:var(--orange)">.env</code> file.
-        Edit that file and restart the server to update credentials. See <strong>README.md</strong> for the full setup guide.
+        Credentials are managed through the <strong>Admin Panel</strong>. Ask your admin to update them there.
       </p>
       <div class="form-row">
         <div class="form-group">
@@ -599,7 +652,6 @@
         </div>
       </div>
     </div>
-
     <div class="settings-section">
       <div class="settings-section-title">Repricer Behaviour</div>
       <div class="form-row">
@@ -614,7 +666,6 @@
         </div>
       </div>
     </div>
-
     <div class="settings-section">
       <div class="settings-section-title">How it works</div>
       <ol style="color:var(--muted);font-size:12px;line-height:2;padding-left:18px">
@@ -625,7 +676,6 @@
         <li>If there is no Buy Box (no winner), the listing is skipped.</li>
       </ol>
     </div>
-
     <div class="form-footer">
       <button class="btn btn-ghost" onclick="closeSettings()">Close</button>
     </div>
@@ -642,8 +692,6 @@
 let allListings = [];
 let editMode    = false;
 let editSku     = null;
-
-// ── Helpers ──────────────────────────────────────────────────────────────
 
 const $ = id => document.getElementById(id);
 
@@ -665,8 +713,7 @@ function fmtTime(ts) {
   if (!ts || ts === 'Never') return '<span style="color:var(--muted)">Never</span>';
   try {
     const d = new Date(ts);
-    return d.toLocaleString('en-GB', { day:'2-digit', month:'short',
-      hour:'2-digit', minute:'2-digit' });
+    return d.toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
   } catch { return ts; }
 }
 
@@ -682,9 +729,7 @@ function actionBadge(action) {
   return `<span class="badge ${cls}">${label}</span>`;
 }
 
-function showProgress(on) {
-  $('progress').classList.toggle('show', on);
-}
+function showProgress(on) { $('progress').classList.toggle('show', on); }
 
 function toast(msg, type='info') {
   const el = document.createElement('div');
@@ -695,16 +740,19 @@ function toast(msg, type='info') {
   setTimeout(() => el.remove(), 3500);
 }
 
-// ── Hide admin link for non-admins ───────────────────────────────────────
+// ── Session info ──────────────────────────────────────────────────────────
 fetch('/api/me').then(r => r.json()).then(me => {
-  if (!me.is_admin) {
-    const el = document.getElementById('admin-link');
-    if (el) el.style.display = 'none';
+  if (me.is_admin) {
+    const el = $('admin-link');
+    if (el) el.style.display = 'flex';
   }
+  const initials = (me.username || '?')[0].toUpperCase();
+  $('user-avatar').textContent = initials;
+  $('user-name').textContent   = me.username || '—';
+  $('user-role').textContent   = me.is_admin ? 'Admin' : 'Seller';
 });
 
-// ── Data fetching ────────────────────────────────────────────────────────
-
+// ── Stats ─────────────────────────────────────────────────────────────────
 async function fetchStats() {
   try {
     const r = await fetch('/api/stats');
@@ -724,21 +772,20 @@ async function testApiHealth() {
   const dot  = $('api-dot');
   const msg  = $('api-status-msg');
   const time = $('api-tested-at');
-  dot.className  = 'status-dot dot-orange';
+  dot.className   = 'status-dot dot-orange';
   msg.textContent = 'Testing connection…';
-  bar.className  = 'api-status-bar';
+  bar.className   = 'api-status-bar';
   try {
     const r = await fetch('/api/health');
     const d = await r.json();
-    dot.className  = d.ok ? 'status-dot dot-green' : 'status-dot dot-red';
+    dot.className   = d.ok ? 'status-dot dot-green' : 'status-dot dot-red';
     msg.textContent = d.message || (r.ok ? 'Connected' : `Error ${r.status}`);
-    bar.className  = 'api-status-bar ' + (d.ok ? 'ok' : 'fail');
-    const now = new Date();
-    time.textContent = 'Tested at ' + now.toLocaleTimeString();
+    bar.className   = 'api-status-bar ' + (d.ok ? 'ok' : 'fail');
+    time.textContent = 'Tested at ' + new Date().toLocaleTimeString();
   } catch(e) {
-    dot.className  = 'status-dot dot-red';
+    dot.className   = 'status-dot dot-red';
     msg.textContent = 'Could not reach server';
-    bar.className  = 'api-status-bar fail';
+    bar.className   = 'api-status-bar fail';
   }
 }
 
@@ -748,34 +795,24 @@ async function fetchListings() {
     const r = await fetch('/api/listings');
     allListings = await r.json();
     renderListings(allListings);
-  } catch(e) {
-    toast('Failed to load listings', 'error');
-  } finally {
-    showProgress(false);
-  }
+  } catch(e) { toast('Failed to load listings', 'error'); }
+  finally { showProgress(false); }
 }
 
 async function fetchLogs() {
   showProgress(true);
   try {
-    const r  = await fetch('/api/reprice/logs?limit=200');
+    const r    = await fetch('/api/reprice/logs?limit=200');
     const logs = await r.json();
     renderLogs(logs);
-  } catch(e) {
-    toast('Failed to load logs', 'error');
-  } finally {
-    showProgress(false);
-  }
+  } catch(e) { toast('Failed to load logs', 'error'); }
+  finally { showProgress(false); }
 }
-
-// ── Render ───────────────────────────────────────────────────────────────
 
 function renderListings(data) {
   const tbody = $('listings-body');
   if (!data.length) {
-    tbody.innerHTML = `<tr><td colspan="11">
-      <div class="empty-state"><div class="icon">📦</div>
-      <p>No listings yet. Click <strong>+ Add Listing</strong> to get started.</p></div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="11"><div class="empty-state"><div class="icon">📦</div><p>No listings yet. Click <strong>+ Add Listing</strong> to get started.</p></div></td></tr>`;
     return;
   }
   tbody.innerHTML = data.map(l => `
@@ -788,11 +825,7 @@ function renderListings(data) {
       <td class="mono price-min">${fmt(l.min_price)}</td>
       <td class="mono price-max">${fmt(l.max_price)}</td>
       <td>${fmtDiff(l.current_price, l.buy_box_price)}</td>
-      <td>
-        <span class="badge ${l.enabled ? 'badge-active' : 'badge-paused'}">
-          ${l.enabled ? '● Active' : '○ Paused'}
-        </span>
-      </td>
+      <td><span class="badge ${l.enabled ? 'badge-active' : 'badge-paused'}">${l.enabled ? '● Active' : '○ Paused'}</span></td>
       <td style="font-size:12px;color:var(--muted)">${fmtTime(l.last_repriced)}</td>
       <td>
         <div class="actions">
@@ -812,9 +845,7 @@ function renderListings(data) {
 function renderLogs(logs) {
   const tbody = $('logs-body');
   if (!logs.length) {
-    tbody.innerHTML = `<tr><td colspan="7">
-      <div class="empty-state"><div class="icon">📋</div>
-      <p>No activity yet. Run the repricer to see logs here.</p></div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="icon">📋</div><p>No activity yet. Run the repricer to see logs here.</p></div></td></tr>`;
     return;
   }
   tbody.innerHTML = logs.map(l => `
@@ -830,8 +861,6 @@ function renderLogs(logs) {
   `).join('');
 }
 
-// ── Filter ───────────────────────────────────────────────────────────────
-
 function filterTable() {
   const q = $('search-input').value.toLowerCase();
   if (!q) { renderListings(allListings); return; }
@@ -842,8 +871,6 @@ function filterTable() {
   ));
 }
 
-// ── Tabs ─────────────────────────────────────────────────────────────────
-
 function switchTab(name, el) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
@@ -851,8 +878,6 @@ function switchTab(name, el) {
   $('panel-' + name).classList.add('active');
   if (name === 'logs') fetchLogs();
 }
-
-// ── Repricer ─────────────────────────────────────────────────────────────
 
 async function manualRun() {
   const btn = $('run-btn');
@@ -864,32 +889,23 @@ async function manualRun() {
     await fetch('/api/reprice/run', { method: 'POST' });
     toast('Reprice run dispatched. Results will appear shortly.', 'success');
     setTimeout(() => { fetchListings(); fetchStats(); fetchLogs(); }, 4000);
-  } catch(e) {
-    toast('Failed to start repricer', 'error');
-  } finally {
+  } catch(e) { toast('Failed to start repricer', 'error'); }
+  finally {
     showProgress(false);
-    setTimeout(() => {
-      btn.disabled = false;
-      btn.textContent = '▶ Run Now';
-    }, 5000);
+    setTimeout(() => { btn.disabled = false; btn.textContent = '▶ Run Now'; }, 5000);
   }
 }
-
-// ── Toggle enabled ────────────────────────────────────────────────────────
 
 async function toggleEnabled(sku, enabled) {
   try {
     await fetch(`/api/listings/${encodeURIComponent(sku)}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'PUT', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ enabled }),
     });
     toast(`${sku} ${enabled ? 'activated' : 'paused'}`, 'success');
     fetchListings(); fetchStats();
   } catch(e) { toast('Update failed', 'error'); }
 }
-
-// ── Delete ────────────────────────────────────────────────────────────────
 
 async function deleteListing(sku) {
   if (!confirm(`Delete listing "${sku}"? This cannot be undone.`)) return;
@@ -900,8 +916,6 @@ async function deleteListing(sku) {
   } catch(e) { toast('Delete failed', 'error'); }
 }
 
-// ── Force push ────────────────────────────────────────────────────────────
-
 async function forcePush(sku) {
   if (!confirm(`Force push price for "${sku}" to Amazon now?\nThis bypasses the "no change" check and sends the price directly to SP-API.`)) return;
   try {
@@ -909,27 +923,19 @@ async function forcePush(sku) {
     const r = await fetch(`/api/reprice/force/${encodeURIComponent(sku)}`, { method: 'POST' });
     const d = await r.json();
     if (!r.ok) { toast(d.detail || 'Force push failed', 'error'); return; }
-    const action = d.action;
-    if (action === 'REPRICED') toast(`${sku} → £${d.new_price.toFixed(2)} sent to Amazon`, 'success');
-    else if (action === 'FAILED') toast(`${sku}: Amazon rejected the update — check logs`, 'error');
-    else toast(`${sku}: ${d.reason || action}`, 'info');
+    if (d.action === 'REPRICED') toast(`${sku} → £${d.new_price.toFixed(2)} sent to Amazon`, 'success');
+    else if (d.action === 'FAILED') toast(`${sku}: Amazon rejected the update — check logs`, 'error');
+    else toast(`${sku}: ${d.reason || d.action}`, 'info');
     fetchListings(); fetchStats(); fetchLogs();
-  } catch(e) { toast('Force push error: ' + (e.message || e), 'error'); console.error('forcePush error', e); }
+  } catch(e) { toast('Force push error: ' + (e.message || e), 'error'); }
   finally { showProgress(false); }
 }
-
-// ── Add / Edit modal ──────────────────────────────────────────────────────
 
 function openAddModal() {
   editMode = false; editSku = null;
   $('modal-title').textContent = 'Add Listing';
   $('save-btn').textContent    = 'Save Listing';
-  $('f-sku').value       = '';
-  $('f-asin').value      = '';
-  $('f-title').value     = '';
-  $('f-current').value   = '';
-  $('f-min').value       = '';
-  $('f-max').value       = '';
+  ['f-sku','f-asin','f-title','f-current','f-min','f-max'].forEach(id => $(id).value = '');
   $('f-enabled').checked = true;
   $('f-sku').disabled    = false;
   $('listing-overlay').classList.add('open');
@@ -953,9 +959,7 @@ function openEditModal(sku) {
   $('listing-overlay').classList.add('open');
 }
 
-function closeListingModal() {
-  $('listing-overlay').classList.remove('open');
-}
+function closeListingModal() { $('listing-overlay').classList.remove('open'); }
 
 async function saveListing() {
   const sku     = $('f-sku').value.trim();
@@ -966,58 +970,39 @@ async function saveListing() {
   const max     = parseFloat($('f-max').value);
   const enabled = $('f-enabled').checked;
 
-  if (!sku)               return toast('SKU is required', 'error');
+  if (!sku)                        return toast('SKU is required', 'error');
   if (!asin || asin.length !== 10) return toast('ASIN must be 10 characters', 'error');
-  if (isNaN(current) || current < 0) return toast('Enter a valid current price', 'error');
-  if (isNaN(min) || min < 0)         return toast('Enter a valid floor price', 'error');
-  if (isNaN(max) || max < min)       return toast('Ceiling must be ≥ floor price', 'error');
+  if (isNaN(current) || current<0) return toast('Enter a valid current price', 'error');
+  if (isNaN(min) || min<0)         return toast('Enter a valid floor price', 'error');
+  if (isNaN(max) || max<min)       return toast('Ceiling must be ≥ floor price', 'error');
 
-  const body = editMode
+  const body   = editMode
     ? JSON.stringify({ title, current_price: current, min_price: min, max_price: max, enabled })
     : JSON.stringify({ sku, asin, title, current_price: current, min_price: min, max_price: max, enabled });
-
   const url    = editMode ? `/api/listings/${encodeURIComponent(editSku)}` : '/api/listings';
   const method = editMode ? 'PUT' : 'POST';
 
   try {
-    const r = await fetch(url, {
-      method, headers: { 'Content-Type': 'application/json' }, body,
-    });
-    if (!r.ok) {
-      const err = await r.json();
-      return toast(err.detail || 'Save failed', 'error');
-    }
+    const r = await fetch(url, { method, headers:{'Content-Type':'application/json'}, body });
+    if (!r.ok) { const e = await r.json(); return toast(e.detail || 'Save failed', 'error'); }
     toast(editMode ? `${sku} updated` : `${sku} added`, 'success');
     closeListingModal();
     fetchListings(); fetchStats();
-  } catch(e) {
-    toast('Network error', 'error');
-  }
+  } catch(e) { toast('Network error', 'error'); }
 }
-
-// ── Settings modal ────────────────────────────────────────────────────────
 
 function openSettings()  { $('settings-overlay').classList.add('open'); }
 function closeSettings() { $('settings-overlay').classList.remove('open'); }
 
-// ── Keyboard shortcuts ────────────────────────────────────────────────────
-
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
-    closeListingModal();
-    closeSettings();
-  }
+  if (e.key === 'Escape') { closeListingModal(); closeSettings(); }
 });
 
-// ── Auto-refresh every 60 s ───────────────────────────────────────────────
+setInterval(() => { fetchStats(); fetchListings(); }, 60_000);
 
-function refreshAll() { fetchStats(); fetchListings(); }
-
-setInterval(refreshAll, 60_000);
-
-// ── Bootstrap ────────────────────────────────────────────────────────────
-
-refreshAll();
+// Bootstrap
+fetchStats();
+fetchListings();
 testApiHealth();
 </script>
 </body>

@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
-from sp_api.api import Products, ListingsItems, CatalogItems
+from sp_api.api import Products, ListingsItems, CatalogItems, ProductFees
 from sp_api.base import Marketplaces, SellingApiException
 
 from config import config
@@ -97,6 +97,105 @@ def get_buy_box_price(asin: str, credentials: dict) -> Optional[float]:
     except Exception as exc:
         logger.error("Unexpected error in get_buy_box_price: %s", exc)
         return None
+
+
+def analyze_asin(asin: str, credentials: dict) -> dict:
+    """
+    Fetch a full product snapshot for the Analysis page.
+    Returns: title, image_url, category, bsr, buy_box_price,
+             offer_count_new, fba_fee, referral_fee
+    """
+    result: dict = {
+        "asin":            asin,
+        "title":           None,
+        "image_url":       None,
+        "category":        None,
+        "bsr":             None,
+        "buy_box_price":   None,
+        "offer_count_new": None,
+        "fba_fee":         None,
+        "referral_fee":    None,
+    }
+
+    # ── 1. Catalog: title, image, BSR, category ────────────────────────────
+    try:
+        cat_api = CatalogItems(credentials=credentials, marketplace=_MARKETPLACE)
+        cat_resp = cat_api.get_catalog_item(
+            asin=asin,
+            marketplaceIds=[config.MARKETPLACE_ID],
+            includedData=["summaries", "salesRanks"],
+        )
+        payload = cat_resp.payload
+
+        for summary in payload.get("summaries", []):
+            if summary.get("marketplaceId") == config.MARKETPLACE_ID:
+                result["title"] = summary.get("itemName")
+                img = summary.get("mainImage", {})
+                result["image_url"] = img.get("link")
+                break
+
+        for sr in payload.get("salesRanks", []):
+            if sr.get("marketplaceId") == config.MARKETPLACE_ID:
+                ranks = sr.get("ranks", [])
+                if ranks:
+                    result["bsr"]      = ranks[0].get("rank")
+                    result["category"] = ranks[0].get("title") or ranks[0].get("displayGroupName")
+                break
+    except Exception as exc:
+        logger.warning("CatalogItems failed ASIN=%s: %s", asin, exc)
+
+    # ── 2. Products: buy box price + offer count ───────────────────────────
+    try:
+        prod_api = Products(credentials=credentials, marketplace=_MARKETPLACE)
+        prod_resp = prod_api.get_competitive_pricing_for_asins(asin_list=[asin])
+
+        for item in prod_resp.payload:
+            if item.get("ASIN") != asin:
+                continue
+            comp = item.get("Product", {}).get("CompetitivePricing", {})
+
+            for cp in comp.get("CompetitivePrices", []):
+                if str(cp.get("CompetitivePriceId")) == "1":
+                    result["buy_box_price"] = float(cp["Price"]["LandedPrice"]["Amount"])
+                    break
+
+            if result["buy_box_price"] is None:
+                for bp in comp.get("BuyBoxPrices", []):
+                    if bp.get("condition", "").lower() in ("new", "used"):
+                        result["buy_box_price"] = float(bp["LandedPrice"]["Amount"])
+                        break
+
+            for offer in comp.get("NumberOfOfferListings", []):
+                if offer.get("condition", "").lower() == "new":
+                    result["offer_count_new"] = offer.get("Count")
+                    break
+    except Exception as exc:
+        logger.warning("Products API failed ASIN=%s: %s", asin, exc)
+
+    # ── 3. FBA fee estimate ────────────────────────────────────────────────
+    price_for_fees = result["buy_box_price"] or 10.0
+    try:
+        fees_api = ProductFees(credentials=credentials, marketplace=_MARKETPLACE)
+        fees_resp = fees_api.get_product_fees_estimate_for_asin(
+            asin,
+            price=price_for_fees,
+            currency="GBP",
+            is_fba=True,
+        )
+        fees_result = fees_resp.payload.get("FeesEstimateResult", {})
+        fees_est    = fees_result.get("FeesEstimate", {})
+        total       = fees_est.get("TotalFeesEstimate", {})
+        if total:
+            result["fba_fee"] = float(total.get("Amount", 0))
+        for component in fees_est.get("FeeDetailList", []):
+            if component.get("FeeType") == "ReferralFee":
+                amt = component.get("FeeAmount", {})
+                result["referral_fee"] = float(amt.get("Amount", 0))
+                break
+    except Exception as exc:
+        logger.warning("ProductFees API failed ASIN=%s: %s", asin, exc)
+
+    return result
 
 
 def update_price(sku: str, new_price: float, credentials: dict, seller_id_amz: str, asin: str = "") -> bool:
