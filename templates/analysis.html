@@ -168,22 +168,6 @@
     display: flex; align-items: center; gap: 4px;
   }
 
-  /* Cost price bar */
-  .cost-bar {
-    display: flex; align-items: center; gap: 12px;
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 10px; padding: 10px 16px; margin-bottom: 20px;
-    flex-wrap: wrap;
-  }
-  .cost-bar-label { font-size: 12px; font-weight: 600; color: var(--label); white-space: nowrap; }
-  .cost-input-inline {
-    background: var(--card); border: 1px solid var(--border2);
-    color: var(--text); border-radius: 7px; padding: 7px 12px;
-    font-size: 14px; font-family: var(--font-mono); font-weight: 600;
-    outline: none; transition: border-color .15s; width: 120px;
-  }
-  .cost-input-inline:focus { border-color: var(--orange); }
-  .cost-hint { font-size: 11px; color: var(--muted); }
 
   /* ── Progress ── */
   .progress-section { margin-bottom: 20px; display: none; }
@@ -282,6 +266,17 @@
   .empty-state .icon { font-size: 36px; margin-bottom: 12px; }
   .empty-state p { font-size: 14px; }
 
+  /* Per-row cost input */
+  .row-cost-input {
+    width: 82px; background: var(--surface);
+    border: 1px solid var(--border2); color: var(--text);
+    border-radius: 6px; padding: 5px 8px;
+    font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+    text-align: right; outline: none; transition: border-color .15s;
+  }
+  .row-cost-input:focus { border-color: var(--orange); }
+  .row-cost-input::placeholder { color: var(--muted); font-weight: 400; }
+
   /* Scrollbar */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: var(--surface); }
@@ -328,7 +323,7 @@
   <nav class="sidebar-nav">
     <span class="nav-section-label">Main</span>
     <a href="/" class="nav-item">
-      <span class="nav-icon">📊</span> Dashboard
+      <span class="nav-icon">📊</span> Pricer
     </a>
     <a href="/analysis" class="nav-item active">
       <span class="nav-icon">🔍</span> Analysis
@@ -398,15 +393,6 @@
     </div>
   </div>
 
-  <!-- Cost price bar -->
-  <div class="cost-bar">
-    <span class="cost-bar-label">💰 Cost Price (optional):</span>
-    <input type="number" id="cost-input" class="cost-input-inline"
-           placeholder="£0.00" step="0.01" min="0"
-           oninput="recalcAllProfits()" />
-    <span class="cost-hint">Enter your cost to auto-calculate profit for all rows</span>
-  </div>
-
   <!-- Progress -->
   <div class="progress-section" id="progress-section">
     <div class="progress-header">
@@ -429,7 +415,7 @@
       <thead>
         <tr>
           <th style="width:36px">#</th>
-          <th style="min-width:320px">Product</th>
+          <th style="min-width:300px">Product</th>
           <th class="right">Buy Box</th>
           <th class="right">Offers</th>
           <th class="right">BSR</th>
@@ -437,7 +423,8 @@
           <th class="right">FBA Fee</th>
           <th class="right">Referral</th>
           <th class="right">Net Rev.</th>
-          <th class="right profit-col" id="profit-header" style="display:none">Profit</th>
+          <th class="right" style="white-space:nowrap">My Cost (£)</th>
+          <th class="right">Profit</th>
         </tr>
       </thead>
       <tbody id="results-tbody"></tbody>
@@ -646,7 +633,8 @@ function skeletonRow(asin, i) {
     <td class="right val-muted">—</td>
     <td class="right val-muted">—</td>
     <td class="right val-muted">—</td>
-    <td class="right profit-col" style="display:none">—</td>
+    <td class="right">—</td>
+    <td class="right val-muted" id="profit-cell-${i}">—</td>
   </tr>`;
 }
 
@@ -667,15 +655,14 @@ function rerenderRow(i) {
         </div>
       </div></td>
       <td colspan="7" style="color:var(--muted);font-size:12px">SP-API error — check credentials or ASIN</td>
-      <td class="profit-col" style="display:none"></td>`;
+      <td></td><td></td>`;
     return;
   }
 
   row.className = '';
 
+  const existingCost = results[i].cost != null ? results[i].cost : '';
   const imgHtml = buildImageHtml(d);
-  const cost    = getCostPrice();
-  const profitHtml = buildProfitCell(d, cost);
 
   row.innerHTML = `
     <td class="val-muted mono">${i + 1}</td>
@@ -692,11 +679,17 @@ function rerenderRow(i) {
     <td class="right">${d.buy_box_price != null ? `<span class="val-orange">£${d.buy_box_price.toFixed(2)}</span>` : '<span class="val-muted">—</span>'}</td>
     <td class="right mono">${d.offer_count_new != null ? d.offer_count_new : '<span class="val-muted">—</span>'}</td>
     <td class="right mono">${d.bsr != null ? '#' + parseInt(d.bsr).toLocaleString('en-GB') : '<span class="val-muted">—</span>'}</td>
-    <td style="font-size:12px;color:var(--label);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${d.category||''}">${d.category || '<span style="color:var(--muted)">—</span>'}</td>
+    <td style="font-size:12px;color:var(--label);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${d.category||''}">${d.category || '<span style="color:var(--muted)">—</span>'}</td>
     <td class="right mono">${d.fba_fee != null ? `<span class="val-red">-£${d.fba_fee.toFixed(2)}</span>` : '<span class="val-muted">—</span>'}</td>
     <td class="right mono">${d.referral_fee != null ? `<span class="val-red">-£${d.referral_fee.toFixed(2)}</span>` : '<span class="val-muted">—</span>'}</td>
     <td class="right mono">${buildNetRevCell(d)}</td>
-    <td class="right mono profit-col" id="profit-cell-${i}" style="display:${getCostPrice() != null ? 'table-cell' : 'none'}">${profitHtml}</td>`;
+    <td class="right">
+      <input type="number" class="row-cost-input"
+        placeholder="£" step="0.01" min="0"
+        value="${existingCost}"
+        oninput="calcRowProfit(${i}, this.value)" />
+    </td>
+    <td class="right mono" id="profit-cell-${i}">${existingCost !== '' ? buildProfitCell(d, parseFloat(existingCost)) : '<span class="val-muted">—</span>'}</td>`;
 }
 
 function buildImageHtml(d) {
@@ -722,31 +715,20 @@ function buildProfitCell(d, cost) {
   return `<span class="${cls}">£${profit.toFixed(2)}</span><br><span style="font-size:10px;color:var(--muted)">${pct}%</span>`;
 }
 
-// ── Cost price & profit column ─────────────────────────────────────────────
-function getCostPrice() {
-  const v = parseFloat($('cost-input').value);
-  return isNaN(v) || v < 0 ? null : v;
-}
+// ── Per-row profit calculator ──────────────────────────────────────────────
+function calcRowProfit(i, costVal) {
+  const cost = parseFloat(costVal);
+  const d    = results[i];
+  const cell = document.getElementById(`profit-cell-${i}`);
+  if (!cell || !d || d.status !== 'ok') return;
 
-function recalcAllProfits() {
-  const cost     = getCostPrice();
-  const hasCost  = cost != null;
-  const header   = $('profit-header');
-  if (header) header.style.display = hasCost ? 'table-cell' : 'none';
+  results[i].cost = isNaN(cost) || cost < 0 ? null : cost;
 
-  results.forEach((d, i) => {
-    const cell = document.getElementById(`profit-cell-${i}`);
-    if (!cell) return;
-    cell.style.display = hasCost ? 'table-cell' : 'none';
-    if (d.status === 'ok') {
-      cell.innerHTML = buildProfitCell(d, cost);
-    }
-  });
-
-  // Also show/hide all profit-col cells in skeleton/error rows
-  document.querySelectorAll('.profit-col').forEach(el => {
-    el.style.display = hasCost ? 'table-cell' : 'none';
-  });
+  if (results[i].cost == null || d.buy_box_price == null) {
+    cell.innerHTML = '<span class="val-muted">—</span>';
+    return;
+  }
+  cell.innerHTML = buildProfitCell(d, results[i].cost);
 }
 
 // ── Clear ──────────────────────────────────────────────────────────────────
@@ -759,21 +741,18 @@ function clearAll() {
   $('clear-btn').style.display = 'none';
   $('export-btn').style.display = 'none';
   $('asin-textarea').value = '';
-  $('cost-input').value = '';
 }
 
 // ── Export CSV ─────────────────────────────────────────────────────────────
 function exportCSV() {
-  const hasCost = getCostPrice() != null;
   const headers = ['#', 'ASIN', 'Title', 'Buy Box (£)', 'New Offers', 'BSR', 'Category',
-                   'FBA Fee (£)', 'Referral Fee (£)', 'Net Revenue (£)'];
-  if (hasCost) headers.push('Cost (£)', 'Profit (£)', 'Margin (%)');
+                   'FBA Fee (£)', 'Referral Fee (£)', 'Net Revenue (£)', 'My Cost (£)', 'Profit (£)', 'Margin (%)'];
 
   const rows = results.map((d, i) => {
-    if (d.status !== 'ok') return [i+1, d.asin, 'ERROR', '', '', '', '', '', '', ''];
-    const cost  = getCostPrice();
-    const net   = d.buy_box_price != null ? (d.buy_box_price - (d.fba_fee || 0)).toFixed(2) : '';
-    const row   = [
+    if (d.status !== 'ok') return [i+1, d.asin, 'ERROR', '', '', '', '', '', '', '', '', '', ''];
+    const cost = d.cost != null ? d.cost : null;
+    const net  = d.buy_box_price != null ? (d.buy_box_price - (d.fba_fee || 0)).toFixed(2) : '';
+    const row  = [
       i+1, d.asin,
       `"${(d.title||'').replace(/"/g,'""')}"`,
       d.buy_box_price != null ? d.buy_box_price.toFixed(2) : '',
@@ -783,13 +762,14 @@ function exportCSV() {
       d.fba_fee != null ? d.fba_fee.toFixed(2) : '',
       d.referral_fee != null ? d.referral_fee.toFixed(2) : '',
       net,
+      cost != null ? cost.toFixed(2) : '',
     ];
-    if (hasCost && cost != null && d.buy_box_price != null) {
+    if (cost != null && d.buy_box_price != null) {
       const profit = d.buy_box_price - (d.fba_fee || 0) - cost;
       const margin = d.buy_box_price > 0 ? ((profit / d.buy_box_price) * 100).toFixed(1) : '';
-      row.push(cost.toFixed(2), profit.toFixed(2), margin);
-    } else if (hasCost) {
-      row.push('', '', '');
+      row.push(profit.toFixed(2), margin);
+    } else {
+      row.push('', '');
     }
     return row;
   });
