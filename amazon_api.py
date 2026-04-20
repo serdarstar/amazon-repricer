@@ -11,8 +11,7 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
-from sp_api.api import Products, ListingsItems, CatalogItems, ProductFees
-from sp_api.api.listings_restrictions import ListingsRestrictions
+from sp_api.api import Products, ListingsItems, CatalogItems, ProductFees, ListingsRestrictions
 from sp_api.base import Marketplaces, SellingApiException
 
 from config import config
