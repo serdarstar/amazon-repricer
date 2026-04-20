@@ -189,10 +189,19 @@
   /* ── Results table ── */
   .results-header {
     display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 12px;
+    margin-bottom: 12px; flex-wrap: wrap; gap: 8px;
   }
   .results-count { font-size: 13px; color: var(--muted); }
   .results-count strong { color: var(--text); }
+
+  .tabs { display: flex; gap: 4px; }
+  .atab {
+    padding: 6px 14px; border-radius: 6px; cursor: pointer;
+    font-size: 13px; font-weight: 500; color: var(--muted);
+    transition: all .15s; user-select: none;
+  }
+  .atab.active { background: var(--card); color: #fff; border: 1px solid var(--border); }
+  .atab:not(.active):hover { color: var(--text); }
 
   .table-wrap {
     background: var(--card); border: 1px solid var(--border);
@@ -404,31 +413,64 @@
     </div>
   </div>
 
-  <!-- Results header -->
+  <!-- Results header + tabs -->
   <div class="results-header" id="results-header" style="display:none">
     <div class="results-count" id="results-count"></div>
+    <div class="tabs">
+      <div class="atab active" data-tab="analysis" onclick="switchAnalysisTab('analysis')">📊 Analiz</div>
+      <div class="atab" data-tab="sellers" onclick="switchAnalysisTab('sellers')">👥 Satıcılar</div>
+    </div>
   </div>
 
-  <!-- Table -->
+  <!-- Table wrap -->
   <div class="table-wrap" id="table-wrap" style="display:none">
-    <table>
-      <thead>
-        <tr>
-          <th style="width:36px">#</th>
-          <th style="min-width:300px">Product</th>
-          <th class="right">Buy Box</th>
-          <th class="right">Offers</th>
-          <th class="right">BSR</th>
-          <th>Category</th>
-          <th class="right">FBA Fee</th>
-          <th class="right">Referral</th>
-          <th class="right">Net Rev.</th>
-          <th class="right" style="white-space:nowrap">My Cost (£)</th>
-          <th class="right">Profit</th>
-        </tr>
-      </thead>
-      <tbody id="results-tbody"></tbody>
-    </table>
+
+    <!-- ASIN Analysis panel -->
+    <div id="panel-analysis">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:36px">#</th>
+            <th style="min-width:300px">Product</th>
+            <th class="right">Buy Box</th>
+            <th class="right">Offers</th>
+            <th>Satabilir miyim?</th>
+            <th class="right">BSR</th>
+            <th>Category</th>
+            <th class="right">FBA Fee</th>
+            <th class="right">Referral</th>
+            <th class="right">Net Rev.</th>
+            <th class="right" style="white-space:nowrap">My Cost (£)</th>
+            <th class="right">Profit</th>
+          </tr>
+        </thead>
+        <tbody id="results-tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- Sellers panel -->
+    <div id="panel-sellers" style="display:none">
+      <table>
+        <thead>
+          <tr>
+            <th>ASIN</th>
+            <th class="right">Fiyat</th>
+            <th class="right">Kargo</th>
+            <th>Gönderim</th>
+            <th>Buy Box</th>
+            <th class="right">Feedback %</th>
+            <th class="right">Feedback Sayısı</th>
+            <th>Ülke</th>
+          </tr>
+        </thead>
+        <tbody id="sellers-tbody">
+          <tr><td colspan="8">
+            <div class="empty-state"><div class="icon">👥</div><p>Henüz analiz yapılmadı.</p></div>
+          </td></tr>
+        </tbody>
+      </table>
+    </div>
+
   </div>
 
 </div><!-- /container -->
@@ -461,6 +503,56 @@ function toast(msg, type='info') {
   el.innerHTML = `<span>${icons[type]||'•'}</span><span>${msg}</span>`;
   $('toast-container').appendChild(el);
   setTimeout(() => el.remove(), 4000);
+}
+
+// ── Tab switching ───────────────────────────────────────────────────────────
+function switchAnalysisTab(name) {
+  document.querySelectorAll('.atab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  $('panel-analysis').style.display = name === 'analysis' ? 'block' : 'none';
+  $('panel-sellers').style.display  = name === 'sellers'  ? 'block' : 'none';
+  if (name === 'sellers') renderSellersTab();
+}
+
+function renderSellersTab() {
+  const rows = [];
+  results.forEach(d => {
+    if (d.status !== 'ok' || !d.offers || !d.offers.length) return;
+    d.offers.forEach(o => rows.push({ asin: d.asin, ...o }));
+  });
+  const tbody = $('sellers-tbody');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="icon">👥</div><p>Satıcı verisi bulunamadı.</p></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(o => `
+    <tr${o.is_my_offer ? ' style="background:rgba(255,153,0,.07)"' : ''}>
+      <td class="mono" style="font-size:11px;color:var(--muted)">
+        <a href="https://www.amazon.co.uk/dp/${o.asin}" target="_blank" rel="noopener"
+           style="color:var(--muted);text-decoration:none"
+           onmouseover="this.style.color='var(--orange)'" onmouseout="this.style.color='var(--muted)'">${o.asin}</a>
+        ${o.is_my_offer ? '<span class="badge badge-skipped" style="margin-left:6px;font-size:9px">Benim</span>' : ''}
+      </td>
+      <td class="right mono">${o.price != null ? `<span class="val-orange">£${o.price.toFixed(2)}</span>` : '—'}</td>
+      <td class="right mono" style="color:var(--muted)">${o.shipping > 0 ? `+£${o.shipping.toFixed(2)}` : '<span style="color:var(--green)">Ücretsiz</span>'}</td>
+      <td>${o.is_fba ? '<span class="badge badge-repriced">FBA</span>' : '<span class="badge badge-nochange">FBM</span>'}</td>
+      <td>${o.is_buy_box_winner ? '<span class="badge badge-repriced">✓ Buy Box</span>' : '<span class="val-muted">—</span>'}</td>
+      <td class="right mono">${o.feedback_pct != null ? o.feedback_pct.toFixed(0) + '%' : '<span class="val-muted">—</span>'}</td>
+      <td class="right mono">${o.feedback_count != null ? parseInt(o.feedback_count).toLocaleString('en-GB') : '<span class="val-muted">—</span>'}</td>
+      <td style="font-size:12px;color:var(--muted)">${o.ships_from || '—'}</td>
+    </tr>
+  `).join('');
+}
+
+// ── Eligibility badge ───────────────────────────────────────────────────────
+function buildEligibilityCell(d) {
+  if (!d.eligibility) return '<span class="val-muted">—</span>';
+  const map = {
+    'ELIGIBLE':          ['badge-repriced', '✓ Uygun'],
+    'APPROVAL_REQUIRED': ['badge-skipped',  '⚠ Onay Gerekli'],
+    'NOT_ELIGIBLE':      ['badge-failed',   '✕ Uygun Değil'],
+  };
+  const [cls, label] = map[d.eligibility] || ['badge-nochange', d.eligibility];
+  return `<span class="badge ${cls}">${label}</span>`;
 }
 
 // ── Format ─────────────────────────────────────────────────────────────────
@@ -628,6 +720,7 @@ function skeletonRow(asin, i) {
     </div></td>
     <td class="right"><span class="spinner-inline"></span></td>
     <td class="right val-muted">—</td>
+    <td class="val-muted">—</td>
     <td class="right val-muted">—</td>
     <td class="val-muted">—</td>
     <td class="right val-muted">—</td>
@@ -654,7 +747,7 @@ function rerenderRow(i) {
           <div class="product-asin"><span>${d.asin}</span></div>
         </div>
       </div></td>
-      <td colspan="7" style="color:var(--muted);font-size:12px">SP-API error — check credentials or ASIN</td>
+      <td colspan="8" style="color:var(--muted);font-size:12px">SP-API error — check credentials or ASIN</td>
       <td></td><td></td>`;
     return;
   }
@@ -678,6 +771,7 @@ function rerenderRow(i) {
     </div></td>
     <td class="right">${d.buy_box_price != null ? `<span class="val-orange">£${d.buy_box_price.toFixed(2)}</span>` : '<span class="val-muted">—</span>'}</td>
     <td class="right mono">${d.offer_count_new != null ? d.offer_count_new : '<span class="val-muted">—</span>'}</td>
+    <td>${buildEligibilityCell(d)}</td>
     <td class="right mono">${d.bsr != null ? '#' + parseInt(d.bsr).toLocaleString('en-GB') : '<span class="val-muted">—</span>'}</td>
     <td style="font-size:12px;color:var(--label);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${d.category||''}">${d.category || '<span style="color:var(--muted)">—</span>'}</td>
     <td class="right mono">${d.fba_fee != null ? `<span class="val-red">-£${d.fba_fee.toFixed(2)}</span>` : '<span class="val-muted">—</span>'}</td>
@@ -745,11 +839,13 @@ function clearAll() {
 
 // ── Export CSV ─────────────────────────────────────────────────────────────
 function exportCSV() {
-  const headers = ['#', 'ASIN', 'Title', 'Buy Box (£)', 'New Offers', 'BSR', 'Category',
+  const headers = ['#', 'ASIN', 'Title', 'Buy Box (£)', 'New Offers', 'Satabilir miyim?', 'BSR', 'Category',
                    'FBA Fee (£)', 'Referral Fee (£)', 'Net Revenue (£)', 'My Cost (£)', 'Profit (£)', 'Margin (%)'];
 
+  const eligMap = { ELIGIBLE: 'Uygun', APPROVAL_REQUIRED: 'Onay Gerekli', NOT_ELIGIBLE: 'Uygun Değil' };
+
   const rows = results.map((d, i) => {
-    if (d.status !== 'ok') return [i+1, d.asin, 'ERROR', '', '', '', '', '', '', '', '', '', ''];
+    if (d.status !== 'ok') return [i+1, d.asin, 'ERROR', '', '', '', '', '', '', '', '', '', '', ''];
     const cost = d.cost != null ? d.cost : null;
     const net  = d.buy_box_price != null ? (d.buy_box_price - (d.fba_fee || 0)).toFixed(2) : '';
     const row  = [
@@ -757,6 +853,7 @@ function exportCSV() {
       `"${(d.title||'').replace(/"/g,'""')}"`,
       d.buy_box_price != null ? d.buy_box_price.toFixed(2) : '',
       d.offer_count_new ?? '',
+      eligMap[d.eligibility] || '',
       d.bsr ?? '',
       `"${(d.category||'').replace(/"/g,'""')}"`,
       d.fba_fee != null ? d.fba_fee.toFixed(2) : '',

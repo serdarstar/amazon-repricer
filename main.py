@@ -273,7 +273,7 @@ def get_analysis(asin: str, request: Request) -> dict:
         raise HTTPException(status_code=400, detail="No SP-API credentials configured. Ask your admin.")
 
     credentials = _build_credentials(dict(creds_row))
-    result = analyze_asin(asin, credentials)
+    result = analyze_asin(asin, credentials, seller_id_amz=creds_row["seller_id_amz"])
     return result
 
 

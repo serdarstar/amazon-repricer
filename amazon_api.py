@@ -12,6 +12,7 @@ import logging
 from typing import Optional
 
 from sp_api.api import Products, ListingsItems, CatalogItems, ProductFees
+from sp_api.api.listings_restrictions import ListingsRestrictions
 from sp_api.base import Marketplaces, SellingApiException
 
 from config import config
@@ -99,22 +100,25 @@ def get_buy_box_price(asin: str, credentials: dict) -> Optional[float]:
         return None
 
 
-def analyze_asin(asin: str, credentials: dict) -> dict:
+def analyze_asin(asin: str, credentials: dict, seller_id_amz: str = None) -> dict:
     """
     Fetch a full product snapshot for the Analysis page.
     Returns: title, image_url, category, bsr, buy_box_price,
-             offer_count_new, fba_fee, referral_fee
+             offer_count_new, fba_fee, referral_fee, eligibility, offers
     """
     result: dict = {
-        "asin":            asin,
-        "title":           None,
-        "image_url":       None,
-        "category":        None,
-        "bsr":             None,
-        "buy_box_price":   None,
-        "offer_count_new": None,
-        "fba_fee":         None,
-        "referral_fee":    None,
+        "asin":                asin,
+        "title":               None,
+        "image_url":           None,
+        "category":            None,
+        "bsr":                 None,
+        "buy_box_price":       None,
+        "offer_count_new":     None,
+        "fba_fee":             None,
+        "referral_fee":        None,
+        "eligibility":         None,
+        "eligibility_reasons": [],
+        "offers":              [],
     }
 
     # ── 1. Catalog: title, image, BSR, category ────────────────────────────
@@ -156,8 +160,8 @@ def analyze_asin(asin: str, credentials: dict) -> dict:
         logger.warning("CatalogItems failed ASIN=%s: %s", asin, exc)
 
     # ── 2. Products: buy box price + offer count ───────────────────────────
+    prod_api = Products(credentials=credentials, marketplace=_MARKETPLACE)
     try:
-        prod_api = Products(credentials=credentials, marketplace=_MARKETPLACE)
         prod_resp = prod_api.get_competitive_pricing_for_asins(asin_list=[asin])
 
         for item in prod_resp.payload:
@@ -205,6 +209,55 @@ def analyze_asin(asin: str, credentials: dict) -> dict:
                 break
     except Exception as exc:
         logger.warning("ProductFees API failed ASIN=%s: %s", asin, exc)
+
+    # ── 4. Buy Box eligibility ─────────────────────────────────────────────
+    if seller_id_amz:
+        try:
+            restr_api = ListingsRestrictions(credentials=credentials, marketplace=_MARKETPLACE)
+            restr_resp = restr_api.get_listings_restrictions(
+                asin=asin,
+                sellerId=seller_id_amz,
+                marketplaceIds=[config.MARKETPLACE_ID],
+                conditionType="new_new",
+            )
+            restrictions = restr_resp.payload.get("restrictions", [])
+            if not restrictions:
+                result["eligibility"] = "ELIGIBLE"
+            else:
+                reasons = []
+                for r in restrictions:
+                    for reason in r.get("reasons", []):
+                        code = reason.get("reasonCode", "")
+                        if code:
+                            reasons.append(code)
+                result["eligibility_reasons"] = reasons
+                if "APPROVAL_REQUIRED" in reasons:
+                    result["eligibility"] = "APPROVAL_REQUIRED"
+                else:
+                    result["eligibility"] = "NOT_ELIGIBLE"
+        except Exception as exc:
+            logger.warning("ListingsRestrictions failed ASIN=%s: %s", asin, exc)
+
+    # ── 5. Item offers (sellers list) ─────────────────────────────────────
+    try:
+        offers_resp = prod_api.get_item_offers(asin=asin, ItemCondition="New")
+        for offer in offers_resp.payload.get("Offers", []):
+            lp = offer.get("ListingPrice", {})
+            sh = offer.get("Shipping", {})
+            fb = offer.get("SellerFeedbackRating", {})
+            sf = offer.get("ShipsFrom", {})
+            result["offers"].append({
+                "price":             float(lp["Amount"]) if lp.get("Amount") is not None else None,
+                "shipping":          float(sh.get("Amount", 0)),
+                "is_fba":            offer.get("IsFulfilledByAmazon", False),
+                "is_buy_box_winner": offer.get("IsBuyBoxWinner", False),
+                "is_my_offer":       offer.get("MyOffer", False),
+                "feedback_pct":      fb.get("SellerPositiveFeedbackRating"),
+                "feedback_count":    fb.get("FeedbackCount"),
+                "ships_from":        sf.get("Country", ""),
+            })
+    except Exception as exc:
+        logger.warning("ItemOffers API failed ASIN=%s: %s", asin, exc)
 
     return result
 
